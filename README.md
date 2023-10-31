@@ -1,1 +1,1 @@
-# testing_system
+# DTS - distributed testing system
