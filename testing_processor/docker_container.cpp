@@ -62,7 +62,7 @@ void TDockerContainer::Run() {
     fclose(dockerOut);
 }
 
-void NDTS::NTestingProcessor::TDockerContainer::Exec(
+void TDockerContainer::Exec(
     std::vector<std::string> scriptArgs, 
     const std::optional<fs::path>& stdIn,
     const std::optional<fs::path>& stdOut
