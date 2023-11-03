@@ -40,7 +40,7 @@ private:
 };
 
 TExecVArgs GetExecCommandArgs(const std::string& containerId, std::vector<std::string>&& scriptArgs) {
-    std::vector<std::string> dockerCommand = {"/usr/bin/docker", "exec", containerId};
+    std::vector<std::string> dockerCommand = {"/usr/bin/docker", "exec", "-i", containerId};
     scriptArgs.insert(scriptArgs.begin(), dockerCommand.begin(), dockerCommand.end());
 
     return {"/usr/bin/docker", std::move(scriptArgs)};
