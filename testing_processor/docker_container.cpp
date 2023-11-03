@@ -10,7 +10,7 @@ namespace NDTS::NTestingProcessor {
 
 class TExecVArgs {
 public:
-    TExecVArgs(std::string&& pathName, std::vector<std::string>&& args)
+    TExecVArgs(std::string pathName, std::vector<std::string> args)
         : pathName_(std::move(pathName)) 
         , args_(std::move(args))
     {
