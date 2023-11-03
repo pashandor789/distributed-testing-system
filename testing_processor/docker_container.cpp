@@ -12,7 +12,7 @@ class TExecVArgs {
 public:
     TExecVArgs(std::string&& pathName, std::vector<std::string>&& args)
         : pathName_(std::move(pathName)) 
-        , args_(args)
+        , args_(std::move(args))
     {
         argV_.reserve(args_.size() + 1);
 
@@ -73,12 +73,12 @@ void NDTS::NTestingProcessor::TDockerContainer::Exec(
 
     if (pid == 0) {
         if (stdIn.has_value()) {
-            int fd = open(stdIn.value().c_str(), 0, O_WRONLY);
+            int fd = open(stdIn.value().c_str(), 0, O_RDONLY);
             dup2(fd, STDIN_FILENO);
         }
 
         if (stdOut.has_value()) {
-            int fd = open(stdOut.value().c_str(), 0, O_RDONLY);
+            int fd = open(stdOut.value().c_str(), 0, O_WRONLY);
             dup2(fd, STDOUT_FILENO);
         }
 
