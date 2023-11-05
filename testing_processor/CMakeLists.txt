@@ -18,5 +18,3 @@ target_link_libraries(
     testing_processor
     testing_processor_proto
 )
-
-include_directories(server PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
