@@ -5,16 +5,15 @@
 #include <optional>
 #include <vector>
 
+#include "proto/docker_container.pb.h"
+
 namespace NDTS::NTestingProcessor {
 
 namespace fs = std::filesystem;
 
 class TDockerContainer {
 public:
-    TDockerContainer(const std::string& image)
-        : image_(image)
-    {
-    }
+    TDockerContainer(const TDockerContainerConfig& config);
 
     void Run();
 
@@ -27,13 +26,18 @@ public:
     ~TDockerContainer();
 
 private:
-    void Stop();
+    void Kill();
 
     void Remove();
 
 private:
-    std::string containerId_;
     std::string image_;
+    uint32_t cpuCount_;
+    std::string memoryLimit_;
+    std::string memorySwapLimit_;
+    uint32_t pidLimit_;
+private:
+    std::string containerId_;
 };
 
 } // end of NDTS::NTestingProcessor namespace
