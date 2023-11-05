@@ -9,7 +9,6 @@ add_executable(
     testing_processor
     docker_container.h
     docker_container.cpp
-    test.cpp
 )
 
 add_subdirectory(proto)
