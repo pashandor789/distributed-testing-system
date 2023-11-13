@@ -1,14 +1,16 @@
 cmake_minimum_required(VERSION 3.21)
 project(testing_processor)
 
-find_package(Protobuf REQUIRED)
-
 set(CMAKE_CXX_STANDARD 23)
 
 add_executable(
     testing_processor
+    brocker_client.h
+    brocker_client.cpp
     docker_container.h
     docker_container.cpp
+    testing_processor.h
+    testing_processor.cpp
 )
 
 add_subdirectory(proto)

@@ -23,12 +23,11 @@ public:
         const std::optional<fs::path>& stdOut
     );
 
-    ~TDockerContainer();
-
-private:
     void Kill();
 
     void Remove();
+
+    ~TDockerContainer();
 
 private:
     std::string image_;
