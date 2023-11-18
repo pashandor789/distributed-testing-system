@@ -5,11 +5,8 @@ set(CMAKE_CXX_STANDARD 23)
 
 add_executable(
     testing_processor
-    brocker_client.h
     brocker_client.cpp
-    docker_container.h
     docker_container.cpp
-    testing_processor.h
     testing_processor.cpp
 )
 

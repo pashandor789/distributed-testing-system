@@ -117,6 +117,20 @@ void TDockerContainer::Kill() {
     std::system(command.c_str());
 }
 
+void TDockerContainer::MoveFileInside(const fs::path& outsidePath, const fs::path& containerPath) {
+    std::string command = "/usr/bin/docker cp";
+
+    command
+        .append(" ")
+        .append(outsidePath)
+        .append(" ")
+        .append(std::to_string(containerId_))
+        .append(":")
+        .append(containerPath);
+
+    std::system(command.c_str());
+}
+
 void TDockerContainer::Remove() {
     std::string command = "/usr/bin/docker rm";
 

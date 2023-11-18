@@ -23,6 +23,8 @@ public:
         const std::optional<fs::path>& stdOut
     );
 
+    void MoveFileInside(const fs::path& outsidePath, const fs::path& containerPath);
+
     void Kill();
 
     void Remove();
