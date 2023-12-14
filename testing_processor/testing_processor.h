@@ -16,7 +16,11 @@ public:
     void Process(const TTestingProcessorRequest& request);
 
 private:
+    void Prepare();
+
+private:
     TDockerContainer container_;
+    std::shared_ptr<TTabascoGRPC::Stub> tabasco_;
 };
 
 } // end of NDTS::NTestingProcessor namespace
