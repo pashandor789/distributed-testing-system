@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package NDTS.NTabasco;
+
+message TTabascoHTTPServerConfig {
+    uint64 batchSize = 1;
+    string baseURL = 2;
+    string storageAccessKey = 3;
+    string storageSecretKey = 4;
+    uint32 serverPort = 5;
+    uint32 serverThreadCount = 6;
+}
