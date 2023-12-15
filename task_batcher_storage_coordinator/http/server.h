@@ -7,6 +7,11 @@
 
 namespace NDTS::TTabasco {
 
+struct TContext {
+    size_t batchSize;
+    const minio::s3::Client& storageClient; 
+};
+
 class TTabascoHTTPServer {
 public:
     TTabascoHTTPServer(const TTabascoHTTPServerConfig& config);
@@ -15,25 +20,6 @@ public:
     
 private:
     void InitHandlers();
-
-    auto GetLoadTestsHandler();
-
-private:
-    void UploadStorageTests(
-        std::vector<std::string>&& tests,
-        const std::string& testSuffix,
-        const std::string& taskId
-    );
-
-    void UploadStorageBatches(
-        std::vector<std::vector<uint64_t>&& batches
-        const std::string& taskId
-    );
-
-    std::vector<std::vector<size_t>> SplitIntoBatches(
-        const std::vector<std::string>& inputTests,
-        const std::vector<std::string>& outputTests
-    );
 
 private:
     size_t batchSize_;
