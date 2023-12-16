@@ -23,8 +23,7 @@ int main(int argc, char** argv) {
     google::protobuf::io::IstreamInputStream stream(&input);
 
     if (!google::protobuf::TextFormat::Parse(&stream, &config)) {
-        std::cerr << "Failed to parse " << configPath << std::endl;
-        exit(1);
+        throw std::runtime_error("can't parse config");
     }
 
     NDTS::NTabasco::TTabascoHTTPServer server{config};

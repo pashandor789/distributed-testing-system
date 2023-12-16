@@ -187,7 +187,7 @@ void TLoadTestsHandler::Handle(const crow::request& req, crow::response& res, co
     minio::s3::MakeBucketArgs args;
     args.bucket = taskId_;
     minio::s3::MakeBucketResponse resp = ctx.storageClient.MakeBucket(args);
-
+    
     UploadStorageBatches(std::move(batches), taskId_, ctx.storageClient);
     UploadStorageTests(std::move(inputTests_), INPUT_TEST_SUFFIX, taskId_, ctx.storageClient);
     UploadStorageTests(std::move(outputTests_), OUTPUT_TEST_SUFFIX, taskId_, ctx.storageClient);
