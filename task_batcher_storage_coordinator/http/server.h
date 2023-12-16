@@ -5,11 +5,11 @@
 
 #include "common/proto/tabasco_config.pb.h"
 
-namespace NDTS::TTabasco {
+namespace NDTS::NTabasco {
 
 struct TContext {
     size_t batchSize;
-    const minio::s3::Client& storageClient; 
+    minio::s3::Client& storageClient; 
 };
 
 class TTabascoHTTPServer {

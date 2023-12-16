@@ -2,7 +2,7 @@
 
 #include <vector>
 
-namespace NDTS::TTabasco {
+namespace NDTS::NTabasco {
 
 static const std::string INPUT_TEST_SUFFIX = "test";
 static const std::string OUTPUT_TEST_SUFFIX = "answer";
@@ -119,7 +119,7 @@ void UploadStorageTests(
     std::vector<std::string>&& tests,
     const std::string& testSuffix,
     const std::string& taskId,
-    const minio::s3::Client& storageClient
+    minio::s3::Client& storageClient
 ) {
     for (size_t i = 0; i < tests.size(); ++i) {
         size_t testSize = tests[i].size();
@@ -135,11 +135,12 @@ void UploadStorageTests(
 }
 
 void UploadStorageBatches(
-    std::vector<std::vector<uint64_t>&& batches
+    std::vector<std::vector<uint64_t>>&& batches,
     const std::string& taskId,
-    const minio::s3::Client& storageClient
+    minio::s3::Client& storageClient
 ) {
-    nlohmann::json jsonData["batches"] = std::move(batches);
+    nlohmann::json jsonData;
+    jsonData["batches"] = std::move(batches);
 
     std::stringstream stream(jsonData.dump());
     minio::s3::PutObjectArgs args(stream, stream.str().size(), 0);
@@ -150,7 +151,7 @@ void UploadStorageBatches(
     minio::s3::PutObjectResponse resp = storageClient.PutObject(args);
 }
 
-TBatches SplitIntoBatches(
+std::vector<std::vector<size_t>> SplitIntoBatches(
     const std::vector<std::string>& inputTests,
     const std::vector<std::string>& outputTests,
     size_t batchSize
@@ -187,9 +188,9 @@ void TLoadTestsHandler::Handle(const crow::request& req, crow::response& res, co
     }
 
     auto batches = SplitIntoBatches(inputTests_, outputTests_, ctx.batchSize);
-    UploadStorageBatches(std::move(batches), taskId, ctx.storageClient);
-    UploadStorageTests(std::move(inputTests_), INPUT_TEST_SUFFIX, taskId, ctx.storageClient);
-    UploadStorageTests(std::move(outputTests_), OUTPUT_TEST_SUFFIX, taskId, ctx.storageClient);
+    UploadStorageBatches(std::move(batches), taskId_, ctx.storageClient);
+    UploadStorageTests(std::move(inputTests_), INPUT_TEST_SUFFIX, taskId_, ctx.storageClient);
+    UploadStorageTests(std::move(outputTests_), OUTPUT_TEST_SUFFIX, taskId_, ctx.storageClient);
 }
 
 } // end of NDTS::TTabasco namespace 

@@ -1,6 +1,32 @@
 #include "server.h"
 
-int main() {
-    NDTS::TTabasco::TTabascoHTTPServer server;
+#include <argparse/argparse.hpp>
+#include <google/protobuf/text_format.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
+
+int main(int argc, char** argv) {
+    argparse::ArgumentParser parser("http tabasco server");
+
+    parser
+        .add_argument("-c", "--config-path")
+        .required()
+        .help("specify config file");
+
+
+    parser.parse_args(argc, argv);
+
+    auto configPath = parser.get<std::string>("--config-path");
+
+    NDTS::NTabasco::TTabascoHTTPServerConfig config;
+
+    std::fstream input(configPath, std::ios::in);
+    google::protobuf::io::IstreamInputStream stream(&input);
+
+    if (!google::protobuf::TextFormat::Parse(&stream, &config)) {
+        std::cerr << "Failed to parse " << configPath << std::endl;
+        exit(1);
+    }
+
+    NDTS::NTabasco::TTabascoHTTPServer server{config};
     server.Run();
 }

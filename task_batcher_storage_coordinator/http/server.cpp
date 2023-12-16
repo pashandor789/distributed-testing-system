@@ -5,22 +5,20 @@
 
 #include <nlohmann/json.hpp>
 
-#include "common/proto/batch.pb.h"
-
 #include "load_tests_handler.h"
 
-namespace NDTS::TTabasco {
+namespace NDTS::NTabasco {
 
 TTabascoHTTPServer::TTabascoHTTPServer(const TTabascoHTTPServerConfig& config)
-    : batchSize_(config.batchSize())
-    , baseURL_(config.storageURL(), false)
-    , provider_(config.storageAccessKey(), config.storageSecretKey())
+    : batchSize_(config.batch_size())
+    , baseURL_(config.storage_url(), false)
+    , provider_(config.storage_access_key(), config.storage_secret_key())
     , client_(baseURL_, &provider_)
 {
     InitHandlers();
 
-    app_.concurrency(config.serverThreadCount());
-    app_.port(config.serverPort());
+    app_.concurrency(config.server_thread_count());
+    app_.port(config.server_port());
 }
 
 void TTabascoHTTPServer::InitHandlers() {
@@ -28,7 +26,7 @@ void TTabascoHTTPServer::InitHandlers() {
         [this](const crow::request& req, crow::response& res) {
             TLoadTestsHandler handler;
             handler.Handle(req, res, {.batchSize = batchSize_, .storageClient = client_});
-        };
+        }
     );
 }
 

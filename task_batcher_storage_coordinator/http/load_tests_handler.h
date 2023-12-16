@@ -4,7 +4,7 @@
 
 #include "server.h"
 
-namespace NDTS::TTabasco {
+namespace NDTS::NTabasco {
 
 class TLoadTestsHandler {
 public:
