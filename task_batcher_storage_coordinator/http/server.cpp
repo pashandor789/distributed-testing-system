@@ -22,10 +22,12 @@ TTabascoHTTPServer::TTabascoHTTPServer(const TTabascoHTTPServerConfig& config)
 }
 
 void TTabascoHTTPServer::InitHandlers() {
-    CROW_ROUTE(app_, "/loadTests")(
-        [this](const crow::request& req, crow::response& res) {
+    CROW_ROUTE(app_, "/loadTests").methods("POST"_method)(
+        [this](const crow::request& req) {
             TLoadTestsHandler handler;
-            handler.Handle(req, res, {.batchSize = batchSize_, .storageClient = client_});
+            crow::response resp;
+            handler.Handle(req, resp, {.batchSize = batchSize_, .storageClient = client_});
+            return resp;
         }
     );
 }

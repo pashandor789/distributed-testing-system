@@ -24,16 +24,11 @@ std::string GetInvalidTests(const std::vector<bool>& initializedTests) {
 }
 
 bool TLoadTestsHandler::Parse(const crow::request& req, crow::response& res) {
-    if (req.get_header_value("Content-Type") != "multipart/form-data") {
-        res.code = 400;
-        return false;
-    }
-
     std::string taskId = "";
 
     crow::multipart::message msg(req);
 
-    size_t testCount = msg.parts.size();
+    size_t testCount = msg.parts.size() / 2;
 
     std::vector<std::string> inputTests(testCount);
     std::vector<std::string> outputTests(testCount);
@@ -109,7 +104,7 @@ bool TLoadTestsHandler::Parse(const crow::request& req, crow::response& res) {
     }
 
     inputTests_ = std::move(inputTests);
-    outputTests_ = std::move(outputTests_);
+    outputTests_ = std::move(outputTests);
     taskId_ = std::move(taskId);
 
     return true;
@@ -188,6 +183,11 @@ void TLoadTestsHandler::Handle(const crow::request& req, crow::response& res, co
     }
 
     auto batches = SplitIntoBatches(inputTests_, outputTests_, ctx.batchSize);
+
+    minio::s3::MakeBucketArgs args;
+    args.bucket = taskId_;
+    minio::s3::MakeBucketResponse resp = ctx.storageClient.MakeBucket(args);
+
     UploadStorageBatches(std::move(batches), taskId_, ctx.storageClient);
     UploadStorageTests(std::move(inputTests_), INPUT_TEST_SUFFIX, taskId_, ctx.storageClient);
     UploadStorageTests(std::move(outputTests_), OUTPUT_TEST_SUFFIX, taskId_, ctx.storageClient);
