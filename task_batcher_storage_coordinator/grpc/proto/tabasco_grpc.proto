@@ -3,25 +3,26 @@ syntax = "proto3";
 package NDTS.NTabasco;
 
 service TTabascoGRPC {
-    rpc GetScripts (GetScriptsRequest) returns (GetScriptsResponse) {}
-    rpc GetBatch (GetBatchRequest) returns (GetBatchResponse) {}
+    rpc GetScripts (TGetScriptsRequest) returns (TGetScriptsResponse) {}
+    rpc GetBatch (TGetBatchRequest) returns (TGetBatchResponse) {}
 }
 
-message GetBatchRequest {
+message TGetBatchRequest {
     uint64 taskId = 1;
-    uint64 batchInd = 2;
+    uint64 batchIndex = 2;
 }
 
-message GetBatchResponse {
-    repeated bytes answer = 1;
-    repeated bytes test = 2;
+message TGetBatchResponse {
+    repeated bytes input = 1;
+    repeated bytes output = 2;
 }
 
-message GetScriptsRequest {
+message TGetScriptsRequest {
     uint64 taskId = 1;
+    uint64 buildId = 2;
 }
 
-message GetScriptsResponse {
+message TGetScriptsResponse {
     bytes build = 1;
     bytes execute = 2;
     uint64 batchCount = 3;

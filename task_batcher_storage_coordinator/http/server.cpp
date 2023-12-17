@@ -9,11 +9,21 @@
 
 namespace NDTS::NTabasco {
 
-TTabascoHTTPServer::TTabascoHTTPServer(const TTabascoHTTPServerConfig& config)
+auto GetLoadTestsHandler(TTabascoHTTPServer* server) {
+    auto callback = 
+    [server](const crow::request& req) {
+        TLoadTestsHandler handler;
+        crow::response resp;
+        handler.Handle(req, resp, TContext{.server = server});
+        return resp;
+    };
+    
+    return callback;
+}
+
+TTabascoHTTPServer::TTabascoHTTPServer(const TTabascoServerConfig& config)
     : batchSize_(config.batch_size())
-    , baseURL_(config.storage_url(), false)
-    , provider_(config.storage_access_key(), config.storage_secret_key())
-    , client_(baseURL_, &provider_)
+    , storageClient_(config.storage_client_config())
 {
     InitHandlers();
 
@@ -23,13 +33,9 @@ TTabascoHTTPServer::TTabascoHTTPServer(const TTabascoHTTPServerConfig& config)
 
 void TTabascoHTTPServer::InitHandlers() {
     CROW_ROUTE(app_, "/loadTests").methods("POST"_method)(
-        [this](const crow::request& req) {
-            TLoadTestsHandler handler;
-            crow::response resp;
-            handler.Handle(req, resp, {.batchSize = batchSize_, .storageClient = client_});
-            return resp;
-        }
+        GetLoadTestsHandler(this)
     );
+
 }
 
 void TTabascoHTTPServer::Run() {

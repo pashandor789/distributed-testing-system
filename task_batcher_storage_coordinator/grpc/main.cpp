@@ -1,8 +1,8 @@
-#include "server.h"
-
 #include <argparse/argparse.hpp>
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
+
+#include "common/proto/tabasco_config.pb.h"
 
 int main(int argc, char** argv) {
     argparse::ArgumentParser parser("http tabasco server");
@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
     if (!google::protobuf::TextFormat::Parse(&stream, &config)) {
         throw std::runtime_error("can't parse config");
     }
-
-    NDTS::NTabasco::TTabascoHTTPServer server{config};
-    server.Run();
+    
+    // NDTS::NTabasco::TTabascoHTTPServer server{config};
+    // server.Run();
 }

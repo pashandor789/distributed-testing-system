@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package NDTS.NTabasco;
+
+message TStorageClientConfig {
+    string url = 1;
+    string access_key = 2;
+    string secret_key = 3;
+}

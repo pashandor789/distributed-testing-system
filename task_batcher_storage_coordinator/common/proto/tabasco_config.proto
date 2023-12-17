@@ -2,11 +2,11 @@ syntax = "proto3";
 
 package NDTS.NTabasco;
 
-message TTabascoHTTPServerConfig {
+import "storage_client.proto";
+
+message TTabascoServerConfig {
     uint64 batch_size = 1;
-    string storage_url = 2;
-    string storage_access_key = 3;
-    string storage_secret_key = 4;
-    uint32 server_port = 5;
-    uint32 server_thread_count = 6;
+    uint32 server_port = 2;
+    uint32 server_thread_count = 3;
+    TStorageClientConfig storage_client_config = 4;
 }

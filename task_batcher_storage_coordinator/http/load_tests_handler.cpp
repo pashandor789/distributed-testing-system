@@ -24,8 +24,6 @@ std::string GetInvalidTests(const std::vector<bool>& initializedTests) {
 }
 
 bool TLoadTestsHandler::Parse(const crow::request& req, crow::response& res) {
-    std::string taskId = "";
-
     crow::multipart::message msg(req);
 
     size_t testCount = msg.parts.size() / 2;
@@ -35,6 +33,8 @@ bool TLoadTestsHandler::Parse(const crow::request& req, crow::response& res) {
 
     std::vector<bool> initializedInputTests(testCount, false);
     std::vector<bool> initialziedOutputTests(testCount, false);
+
+    std::string taskId = "";
 
     for (auto& part: msg.parts) {
         auto contentDisposition = part.get_header_object("Content-Disposition").params;
@@ -103,6 +103,17 @@ bool TLoadTestsHandler::Parse(const crow::request& req, crow::response& res) {
         return false;
     }
 
+    if (taskId.empty()) {
+        res.code = 400;
+        std::string errorString;
+
+        errorString
+            .append("taskId not specified");
+
+        res.body = errorString;
+        return false;
+    }
+
     inputTests_ = std::move(inputTests);
     outputTests_ = std::move(outputTests);
     taskId_ = std::move(taskId);
@@ -114,36 +125,25 @@ void UploadStorageTests(
     std::vector<std::string>&& tests,
     const std::string& testSuffix,
     const std::string& taskId,
-    minio::s3::Client& storageClient
+    TStorageClient& storageClient
 ) {
     for (size_t i = 0; i < tests.size(); ++i) {
-        size_t testSize = tests[i].size();
-        std::stringstream stream(std::move(tests[i]));
-
-        minio::s3::PutObjectArgs args(stream, testSize, 0);
-
-        args.bucket = taskId;
-        args.object = std::to_string(i + 1) + TEST_NUM_SEPARATOR + testSuffix;
-
-        minio::s3::PutObjectResponse resp = storageClient.PutObject(args);
+        std::string fileName = std::to_string(i + 1) + TEST_NUM_SEPARATOR + testSuffix;
+        storageClient.UploadData(taskId, fileName, std::move(tests[i]));
     }
 }
 
 void UploadStorageBatches(
     std::vector<std::vector<uint64_t>>&& batches,
     const std::string& taskId,
-    minio::s3::Client& storageClient
+    TStorageClient& storageClient,
+    size_t batchSize
 ) {
-    nlohmann::json jsonData;
-    jsonData["batches"] = std::move(batches);
+    nlohmann::json metaData;
+    metaData["batchSize"] = batchSize;
+    metaData["batches"] = std::move(batches);
 
-    std::stringstream stream(jsonData.dump());
-    minio::s3::PutObjectArgs args(stream, stream.str().size(), 0);
-
-    args.bucket = taskId;
-    args.object = "meta.json";
-
-    minio::s3::PutObjectResponse resp = storageClient.PutObject(args);
+    storageClient.UploadData(taskId, "meta.json", metaData.dump());
 }
 
 std::vector<std::vector<size_t>> SplitIntoBatches(
@@ -182,15 +182,13 @@ void TLoadTestsHandler::Handle(const crow::request& req, crow::response& res, co
         return;
     }
 
-    auto batches = SplitIntoBatches(inputTests_, outputTests_, ctx.batchSize);
+    auto batches = SplitIntoBatches(inputTests_, outputTests_, ctx.server->batchSize_);
 
-    minio::s3::MakeBucketArgs args;
-    args.bucket = taskId_;
-    minio::s3::MakeBucketResponse resp = ctx.storageClient.MakeBucket(args);
+    ctx.server->storageClient_.CreateBucket(taskId_);
     
-    UploadStorageBatches(std::move(batches), taskId_, ctx.storageClient);
-    UploadStorageTests(std::move(inputTests_), INPUT_TEST_SUFFIX, taskId_, ctx.storageClient);
-    UploadStorageTests(std::move(outputTests_), OUTPUT_TEST_SUFFIX, taskId_, ctx.storageClient);
+    UploadStorageBatches(std::move(batches), taskId_, ctx.server->storageClient_, ctx.server->batchSize_);
+    UploadStorageTests(std::move(inputTests_), INPUT_TEST_SUFFIX, taskId_, ctx.server->storageClient_);
+    UploadStorageTests(std::move(outputTests_), OUTPUT_TEST_SUFFIX, taskId_, ctx.server->storageClient_);
 }
 
 } // end of NDTS::TTabasco namespace 
