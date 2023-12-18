@@ -8,8 +8,8 @@ service TTabascoGRPC {
 }
 
 message TGetBatchRequest {
-    uint64 taskId = 1;
-    uint64 batchIndex = 2;
+    uint64 task_id = 1;
+    uint64 batch_id = 2;
 }
 
 message TGetBatchResponse {
@@ -18,12 +18,12 @@ message TGetBatchResponse {
 }
 
 message TGetScriptsRequest {
-    uint64 taskId = 1;
-    uint64 buildId = 2;
+    uint64 task_id = 1;
+    uint64 build_id = 2;
 }
 
 message TGetScriptsResponse {
-    bytes build = 1;
-    bytes execute = 2;
-    uint64 batchCount = 3;
+    bytes init_script = 1;
+    bytes execute_script = 2;
+    uint64 batch_count = 3;
 }

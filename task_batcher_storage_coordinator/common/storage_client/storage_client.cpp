@@ -30,4 +30,21 @@ bool TStorageClient::CreateBucket(const std::string& bucketName) {
     return static_cast<bool>(resp);
 }
 
+std::pair<bool, std::string> TStorageClient::GetData(const std::string& bucketName, const std::string& fileName) {
+    minio::s3::GetObjectArgs args;
+    args.bucket = bucketName;
+    args.object = fileName;
+
+    std::string data{};
+    args.datafunc = 
+    [&data](minio::http::DataFunctionArgs args) -> bool {
+        data.append(std::move(args.datachunk));
+        return true;
+    };
+
+    minio::s3::GetObjectResponse resp = client_.GetObject(args);
+
+    return {static_cast<bool>(resp), data};
+}
+
 } // end of NDTS::NTabasco namespace

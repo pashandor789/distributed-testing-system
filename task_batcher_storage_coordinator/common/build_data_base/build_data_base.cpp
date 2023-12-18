@@ -38,4 +38,20 @@ void TBuildDataBase::CreateBuild(uint64_t executeScriptId, uint64_t initScriptId
     nonTx.exec_params("INSERT INTO builds (scriptName, content) VALUES ($1, $2)", executeScriptId, initScriptId);
 }
 
+TScripts TBuildDataBase::GetScripts(uint64_t buildId) {
+    pqxx::nontransaction nonTx(connection_);
+    pqxx::result scriptsId = nonTx.exec_params("SELECT * FROM builds WHERE id = $1", buildId);
+
+    uint64_t initScriptId = scriptsId[0][1].as<uint64_t>();
+    pqxx::result initScriptRows = nonTx.exec_params("SELECT * FROM initScripts WHERE id = $1", initScriptId);
+
+    uint64_t executeScriptId = scriptsId[0][2].as<uint64_t>();
+    pqxx::result executeScriptRows = nonTx.exec_params("SELECT * FROM executeScripts WHERE id = $1", executeScriptId);
+
+    return TScripts{
+        .initScript = initScriptRows[0][1].as<std::string>(),
+        .executeScript = executeScriptRows[0][1].as<std::string>()
+    };  
+}
+
 } // end of NDTS::TTabasco namespace

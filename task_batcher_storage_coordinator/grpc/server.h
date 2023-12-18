@@ -1,20 +1,23 @@
+#include "proto/tabasco_grpc.pb.h"
 #include "proto/tabasco_grpc.grpc.pb.h"
 
-#include <miniocpp/client.h>
+#include "common/proto/tabasco_config.pb.h"
+#include "common/storage_client/storage_client.h"
+#include "common/build_data_base/build_data_base.h"
 
 namespace NDTS::NTabasco {
 
 class TTabascoGRPCServiceImpl final: public TTabascoGRPC::Service {
 public:
-    Status GetBatch(ServerContext* context, const TGetBatchRequest* request, TGetBatchResponse* reply) override;
+    TTabascoGRPCServiceImpl(const TTabascoServerConfig& config);
 
-    Status GetScripts(ServerContext* context, const TGetScriptsRequest* request, TGetScriptsResponse* reply) override;
+    grpc::Status GetBatch(grpc::ServerContext* context, const TGetBatchRequest* request, TGetBatchResponse* reply) override;
+
+    grpc::Status GetScripts(grpc::ServerContext* context, const TGetScriptsRequest* request, TGetScriptsResponse* reply) override;
 
 public:
-    minio::s3::BaseUrl baseURL_;
-    minio::creds::StaticProvider provider_;
-    minio::s3::Client client_; // dfs
-
+    TStorageClient storageClient_;
+    TBuildDataBase builds_;
 };
 
 } // end of NDTS::NTabasco namespace

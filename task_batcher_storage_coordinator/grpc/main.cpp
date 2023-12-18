@@ -2,7 +2,13 @@
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 
+#include <fstream>
+
+#include "server.h"
 #include "common/proto/tabasco_config.pb.h"
+
+#include <grpc/grpc.h>
+#include <grpcpp/server_builder.h>
 
 int main(int argc, char** argv) {
     argparse::ArgumentParser parser("http tabasco server");
@@ -26,6 +32,20 @@ int main(int argc, char** argv) {
         throw std::runtime_error("can't parse config");
     }
     
-    // NDTS::NTabasco::TTabascoHTTPServer server{config};
-    // server.Run();
+    std::string ipAddr;
+
+    ipAddr
+        .append("0.0.0.0")
+        .append(":")
+        .append(std::to_string(config.server_port()));
+
+    NDTS::NTabasco::TTabascoGRPCServiceImpl service(config);
+
+    grpc::ServerBuilder builder;
+    builder.AddListeningPort(ipAddr, grpc::InsecureServerCredentials());
+    builder.RegisterService(&service);
+
+    std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
+    std::cout << "Server listening on " << ipAddr << std::endl;
+    server->Wait();
 }

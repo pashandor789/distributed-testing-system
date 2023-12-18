@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package NDTS.NTabasco;
 
-import "storage_client.proto";
-
 message TBuildDataBaseConfig {
     string dbname = 1;
     string user = 2;
