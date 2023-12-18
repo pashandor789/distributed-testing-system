@@ -9,6 +9,7 @@ add_executable(
     load_tests_handler.cpp
     server.cpp
     main.cpp
+    handler_callbacks.cpp
 )
 
 include_directories(${CMAKE_BINARY_DIR})
@@ -18,11 +19,9 @@ set(COMMON_DIR ${TABASCO_ROOT_DIR}/common)
 add_subdirectory(${COMMON_DIR} common)
 include_directories(${TABASCO_ROOT_DIR})
 
-
-message(${CMAKE_BINARY_DIR})
-
 target_link_libraries(
     http_tabasco
     tabasco_common_proto
     tabasco_storage_client
+    build_data_base
 )

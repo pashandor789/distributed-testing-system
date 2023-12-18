@@ -1,29 +1,13 @@
 #include "server.h"
 
-#include <optional>
-#include <sstream>
-
-#include <nlohmann/json.hpp>
-
-#include "load_tests_handler.h"
+#include "handler_callbacks.h"
 
 namespace NDTS::NTabasco {
-
-auto GetLoadTestsHandler(TTabascoHTTPServer* server) {
-    auto callback = 
-    [server](const crow::request& req) {
-        TLoadTestsHandler handler;
-        crow::response resp;
-        handler.Handle(req, resp, TContext{.server = server});
-        return resp;
-    };
-    
-    return callback;
-}
 
 TTabascoHTTPServer::TTabascoHTTPServer(const TTabascoServerConfig& config)
     : batchSize_(config.batch_size())
     , storageClient_(config.storage_client_config())
+    , builds_(config.build_data_base_config())
 {
     InitHandlers();
 
@@ -32,10 +16,21 @@ TTabascoHTTPServer::TTabascoHTTPServer(const TTabascoServerConfig& config)
 }
 
 void TTabascoHTTPServer::InitHandlers() {
-    CROW_ROUTE(app_, "/loadTests").methods("POST"_method)(
-        GetLoadTestsHandler(this)
+    CROW_ROUTE(app_, "/uploadTests").methods("POST"_method) (
+        GetLoadTestsCallback(this)
     );
 
+    CROW_ROUTE(app_, "/uploadInitScript").methods("POST"_method) (
+        GetUploadInitScriptCallback(this)
+    );
+
+    CROW_ROUTE(app_, "/uploadExecuteScript").methods("POST"_method) (
+        GetUploadExecuteScriptCallback(this)
+    );
+
+    CROW_ROUTE(app_, "/createBuild").methods("POST"_method) (
+        GetCreateBuildCallback(this)
+    );
 }
 
 void TTabascoHTTPServer::Run() {

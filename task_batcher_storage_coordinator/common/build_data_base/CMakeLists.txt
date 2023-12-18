@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.21)
 
 add_library(
-    tabasco_storage_client
-    storage_client.cpp
+    build_data_base
+    build_data_base.cpp
 )
 
 if (NOT TARGET tabasco_common_proto)
@@ -10,13 +10,8 @@ if (NOT TARGET tabasco_common_proto)
 endif() 
 
 target_link_libraries(
-    tabasco_storage_client
+    build_data_base
     tabasco_common_proto
-    miniocpp
-    pugixml
-    curlpp
-    curl
-    ssl
-    crypto
-    z
+    pqxx
+    pq
 )
