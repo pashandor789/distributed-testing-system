@@ -67,13 +67,16 @@ THandlerCallback GetCreateBuildCallback(TTabascoHTTPServer* server) {
 
         nlohmann::json data = nlohmann::json::parse(req.body, nullptr, false);
 
-        if (data.is_discarded() || !data.contains("executeScriptId") || !data.contains("initScriptId")) {
+        bool isDataInvalid = 
+            !data.contains("executeScriptId") || !data.contains("initScriptId") || !data.contains("buildName");
+
+        if (data.is_discarded() || isDataInvalid) {
             resp.code = 400;
             resp.body = "bad json";
             return resp;
         }
 
-        server->builds_.CreateBuild(data["executeScriptId"], data["initScriptId"]);
+        server->builds_.CreateBuild(data["buildName"], data["executeScriptId"], data["initScriptId"]);
 
         return resp;
     };

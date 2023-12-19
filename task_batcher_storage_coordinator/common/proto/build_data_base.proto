@@ -7,5 +7,5 @@ message TBuildDataBaseConfig {
     string user = 2;
     string password = 3;
     string hostaddr = 4;
-    string port = 5;
+    uint64 port = 5;
 }

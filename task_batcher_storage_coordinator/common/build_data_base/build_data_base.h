@@ -18,7 +18,7 @@ public:
 
     void UploadExecuteScript(std::string scriptName, std::string content);
 
-    void CreateBuild(uint64_t executeScriptId, uint64_t initScriptId);
+    void CreateBuild(std::string buildName, uint64_t executeScriptId, uint64_t initScriptId);
 
     TScripts GetScripts(uint64_t buildId);
 
