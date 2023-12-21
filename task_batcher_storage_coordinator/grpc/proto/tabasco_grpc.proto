@@ -13,8 +13,8 @@ message TGetBatchRequest {
 }
 
 message TGetBatchResponse {
-    repeated bytes input = 1;
-    repeated bytes output = 2;
+    repeated string input = 1;
+    repeated string output = 2;
 }
 
 message TGetScriptsRequest {
@@ -23,7 +23,7 @@ message TGetScriptsRequest {
 }
 
 message TGetScriptsResponse {
-    bytes init_script = 1;
-    bytes execute_script = 2;
+    string init_script = 1;
+    string execute_script = 2;
     uint64 batch_count = 3;
 }
