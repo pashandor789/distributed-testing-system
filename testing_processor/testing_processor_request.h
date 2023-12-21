@@ -7,17 +7,21 @@ namespace NDTS::NTestingProcessor {
 
 struct TTestingProcessorRequest {
     template <typename TJSON>
-    TTestingProcessorRequest(const TJSON& json)
+    TTestingProcessorRequest(TJSON json)
         : submissionId(json["submissionId"])
         , buildId(json["buildId"])
-        , userData(json["userData"])
+        , userData(std::move(json["userData"]))
         , taskId(json["taskId"])
+        , memoryLimit(json["memoryLimit"])
+        , cpuTimeLimitSeconds(json["cpuTimeLimitSeconds"])
     {}
 
     uint64_t submissionId;
     uint64_t buildId;
     std::string userData;
     uint64_t taskId;
+    uint64_t memoryLimit;
+    float cpuTimeLimitSeconds;
 };
 
 } // end of NDTS::NTestingProcessor namespace

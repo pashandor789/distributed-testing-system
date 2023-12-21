@@ -3,6 +3,9 @@ project(testing_processor)
 
 set(CMAKE_CXX_STANDARD 23)
 
+set(DTS_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/..)
+include_directories(${DTS_ROOT_PATH})
+
 add_executable(
     testing_processor
     brocker_client.cpp
