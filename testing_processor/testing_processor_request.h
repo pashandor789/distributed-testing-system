@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <string>
 
+namespace NDTS::NTestingProcessor {
+
 struct TTestingProcessorRequest {
     template <typename TJSON>
     TTestingProcessorRequest(const TJSON& json)
@@ -17,3 +19,5 @@ struct TTestingProcessorRequest {
     std::string userData;
     uint64_t taskId;
 };
+
+} // end of NDTS::NTestingProcessor namespace

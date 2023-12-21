@@ -17,13 +17,16 @@ public:
 
     void Run();
 
-    void Exec(
+    // return's exit code
+    int Exec(
         std::vector<std::string> scriptArgs, 
         const std::optional<fs::path>& stdIn,
         const std::optional<fs::path>& stdOut
     );
 
-    void MoveFileInside(const fs::path& outsidePath, const fs::path& containerPath);
+    void MoveFileInside(const fs::path& outsidePath, const fs::path& insidePath);
+
+    void CreateFile(const fs::path& path, std::string content);
 
     void Kill();
 

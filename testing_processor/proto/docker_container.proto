@@ -3,9 +3,9 @@ syntax = "proto3";
 package NDTS.NTestingProcessor;
 
 message TDockerContainerConfig {
-    int32 cpuCount = 1;
-    string memoryLimit = 2;
-    string memorySwapLimit = 3;
-    int32 pidLimit = 4;
-    string imageName = 5;
+    int32 cpu_count = 1;
+    string memory_limit = 2;
+    string memory_swap_limit = 3;
+    int32 pid_limit = 4;
+    string image_name = 5;
 }

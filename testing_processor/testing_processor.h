@@ -13,10 +13,12 @@ class TTestingProcessor {
 public:
     TTestingProcessor(const TTestingProcessorConfig& config);
 
-    void Process(const TTestingProcessorRequest& request);
+    void Process(TTestingProcessorRequest request);
 
 private:
-    void Prepare();
+    bool Prepare(TTestingProcessorRequest& request, uint64* const batchCount);
+
+    void Test(TTestingProcessorRequest& request, uint64_t batchCount);
 
 private:
     TDockerContainer container_;

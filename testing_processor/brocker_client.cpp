@@ -3,16 +3,16 @@
 #include <amqpcpp.h>
 #include <amqpcpp/libevent.h>
 
-#include <crow.h>
+#include <nlohmann/json.hpp>
 
 #include "testing_processor.h"
 #include "testing_processor_request.h"
 
 namespace NDTS::NTestingProcessor {
 
-TBrockerClient::TBrockerClient(const TBrockerClientConfig& brockerConfig, const TTestingProcessorConfig testingProcessorConfig)
-    : serverURL_(brockerConfig.serverurl())
-    , queueName_(brockerConfig.queuename())
+TBrockerClient::TBrockerClient(const TTestingProcessorConfig testingProcessorConfig)
+    : serverURL_(testingProcessorConfig.brocker_client_config().server_url())
+    , queueName_(testingProcessorConfig.brocket_client_config().queue_name())
     , testingProcessor_(testingProcessorConfig)
 {}
 
@@ -27,15 +27,16 @@ TBrockerClient::Run() {
     channel.declareQueue(queueName_);
     channel.setQos(1);
 
-    channel.consume(queueName_)
-        .onReceived([&](const AMQP::Message& message, uint64_t deliveryTag, bool redelivered) {
-            auto requestJson = crow::json::load(message.body());
+    channel.consume(queueName_).onReceived(
+        [&channel](const AMQP::Message& message, uint64_t deliveryTag, bool redelivered) {
+            auto requestJson = nlohmann::json::parse(std::move(message.body()), nullptr, false);
             auto request = TTestingProcessorRequest(requestJson);
             
-            testingProcessor_.Process(request);
+            testingProcessor_.Process(std::move(request));
 
             channel.ack(deliveryTag);
-        });
+        }
+    );
 
 
     event_base_dispatch(evbase);

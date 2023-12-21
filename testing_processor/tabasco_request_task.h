@@ -4,21 +4,19 @@
 
 namespace NDTS::NTestingProcessor {
 
+struct TGetScriptsResponse {
+    std::string initScript;
+    std::string executeScript;
+    uint64_t batchCount;
+};
+
 class TTabascoRequestTask {
 public:
-    TTabascoRequestTask(std::shared_ptr<TTabascoGRPC::Stub> stub)
-        : stub_(std::move(stub))
-    {}
+    TTabascoRequestTask();
 
-    void NTabasco::GetScriptsResponse GetScripts() {
-        NTabasco::GetScriptsResponse response;
-        grpc::ClientContext context;
+    TGetScriptsResponse GetScripts(uint64_t taskId, uint64_t buildId);
 
-        tabasco_->GetScripts(getScriptsRequest);
-    }
-
-private:
-    std::shared_ptr<TTabascoGRPC::Stub> stub_;
+    TGetBatchResponse GetBatch(uint64_t taskId, uint64_t batchId);
 };
 
 } // end of NDTS::NTestingProcessor namespace

@@ -3,7 +3,9 @@ syntax = "proto3";
 package NDTS.NTestingProcessor;
 
 import "docker_container.proto";
+import "brocker_client.proto";
 
 message TTestingProcessorConfig {
-    TDockerContainerConfig dockerContainerConfig = 1;
+    TDockerContainerConfig docker_container_config = 1;
+    TBrockerClientConfig brocker_client_config = 2;
 }

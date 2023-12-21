@@ -78,7 +78,7 @@ void TDockerContainer::Run() {
     fclose(dockerOut);
 }
 
-void TDockerContainer::Exec(
+int TDockerContainer::Exec(
     std::vector<std::string> scriptArgs, 
     const std::optional<fs::path>& stdIn,
     const std::optional<fs::path>& stdOut
@@ -104,7 +104,10 @@ void TDockerContainer::Exec(
         exit(1);
     }
 
-    waitpid(pid, nullptr, 0); 
+    int stat = 0;
+    waitpid(pid, &stat, 0);
+    int exitCode = !WEXITED(stat) || WEXITSTATUS(stat);
+    return exitCode; 
 }
 
 void TDockerContainer::Kill() {
