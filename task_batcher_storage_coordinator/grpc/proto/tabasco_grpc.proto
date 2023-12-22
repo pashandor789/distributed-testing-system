@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package NDTS.NTabasco;
+
+service TTabascoGRPC {
+    rpc GetScripts (TGetScriptsRequest) returns (TGetScriptsResponse) {}
+    rpc GetBatch (TGetBatchRequest) returns (TGetBatchResponse) {}
+}
+
+message TGetBatchRequest {
+    uint64 task_id = 1;
+    uint64 batch_id = 2;
+}
+
+message TGetBatchResponse {
+    repeated string input = 1;
+    repeated string output = 2;
+}
+
+message TGetScriptsRequest {
+    uint64 task_id = 1;
+    uint64 build_id = 2;
+}
+
+message TGetScriptsResponse {
+    string init_script = 1;
+    string execute_script = 2;
+    uint64 batch_count = 3;
+}

@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package NDTS.NTabasco;
+
+import "storage_client.proto";
+import "build_data_base.proto";
+
+message TTabascoServerConfig {
+    uint64 batch_size = 1;
+    uint32 server_port = 2;
+    uint32 server_thread_count = 3;
+    TStorageClientConfig storage_client_config = 4;
+    TBuildDataBaseConfig build_data_base_config = 5;
+}
