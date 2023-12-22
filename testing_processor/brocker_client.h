@@ -9,7 +9,7 @@ namespace NDTS::NTestingProcessor {
 
 class TBrockerClient {
 public:
-    TBrockerClient(const TBrockerClientConfig& brockerConfig, const TTestingProcessorConfig& testingProcessorConfig);
+    TBrockerClient(const TTestingProcessorConfig& testingProcessorConfig);
 
     void Run();
 

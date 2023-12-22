@@ -3,6 +3,6 @@ syntax = "proto3";
 package NDTS.NTestingProcessor;
 
 message TBrockerClientConfig {
-    string serverURL = 1;
-    string queueName = 2;
+    string server_url = 1;
+    string queue_name = 2;
 }
