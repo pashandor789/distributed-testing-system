@@ -13,7 +13,7 @@ struct TExecutorArgs {
 class TExecutor {
 public:
     // output as JSON
-    void Execute(const TExecutorArgs& executorArgs, const std::filesystem::path& outputReportFile = "report.json");
+    void Execute(const TExecutorArgs& executorArgs, const std::filesystem::path& outputReportFile);
 };
 
 } // end of NDTS::Executor namespace

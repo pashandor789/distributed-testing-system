@@ -33,8 +33,8 @@ struct TTestingReport {
     {}
 
     TVerdict verdict;
-    uint64_t cpuTimeElapsedMicroSeconds = 0;
-    uint64_t memorySpent = 0;
+    uint64_t cpuTimeElapsedMicroSeconds;
+    uint64_t memorySpent;
 }
 
 TTestingProcessor::TTestingProcessor(const TTestingProcessorConfig& config)
@@ -65,7 +65,7 @@ bool TTestingProcessor::Prepare(TTestingProcessorRequest& request, uint64* const
         std::nullopt,
         std::nullopt
     );
-    
+
     if (exitCode != 0) {
         return false;
     }
@@ -76,17 +76,18 @@ bool TTestingProcessor::Prepare(TTestingProcessorRequest& request, uint64* const
 
 TVerdict CheckOutput(
     const std::fs::path& checkerPath,
-    const std::fs::path& inputTestPath,
-    const std::fs::path& outputTestPath
+    const std::fs::path& outputTestPath,
+    const std::fs::path& userOutputPath,
+    const std::fs::path& inputTestPath
 ) {
     std::string checkerLauncherCommand;
 
     checkerLauncherCommand
         .append(checkerPath)
         .append(" ")
-        .append(inputTestPath)
+        .append(userOutputPath)
         .append(" ")
-        .append(outputTestPath)
+        .append(outputTestPath);
 
     int checkerExitCode = system(checkerLauncherCommand);
 
@@ -128,13 +129,14 @@ std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& re
         for (size_t i = 0; i < testsSize; ++i) {
             std::fs::path inputTestPath = localStoragePath_ / "input.txt";
             std::fs::path outputTestPath = localStoragePath_ / "output.txt";
+            std::fs::path userOutputPath = localStoragePath_ / "userOutput.txt"
 
             DumpTests(inputTestPath, tests.inputTests[i], outputTestPath, tests.outputTests[i]);
 
             container_.Exec(
                 {EXECUTE_SCRIPT_PATH, USER_EXECUTABLE_PATH},
                 inputPath,
-                outputPath
+                userOutputPath
             );
 
             std::string deserializedReport;
@@ -160,7 +162,7 @@ std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& re
                 return report; 
             }
 
-            TVerdict checkerVerdict = CheckOutput(CHECKER_PATH, inputTestPath, outputTestPath);
+            TVerdict checkerVerdict = CheckOutput(CHECKER_PATH, outputTestPath, userOutputPath, inputTestPath);
 
             if (checkerVerdict != TVerdict::OK) {
                 report.back().verdict = checkerVerdict;
@@ -177,7 +179,7 @@ std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& re
 void TTestingProcessor::Commit(std::vector<TTestingReport>&& report) {
     for (size_t i = 0; i < report.size(); ++i) {
         printf(
-            "test #%ld %ld %ld %ld",
+            "commited test #%ld %ld %ld %ld",
             i + 1,
             report[i].cpuTimeElapsedMicroSeconds,
             report[i].memorySpent,

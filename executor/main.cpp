@@ -3,7 +3,7 @@
 #include "executor.h"
 
 int main(int argc, char** argv) {
-    argparse::ArgumentParser parser("http tabasco server");
+    argparse::ArgumentParser parser("executor");
 
     parser
         .add_argument("-c", "--cpu-time-limit")
@@ -15,6 +15,11 @@ int main(int argc, char** argv) {
         .add_argument("-e", "--executable-path")
         .required()
         .help("path to executable file");
+
+    parser
+        .add_argument("-o", "--output-report-path")
+        .default_value("report.json")
+        .help("path to output report file (json format)");
 
     parser.parse_args(argc, argv);
 
@@ -29,5 +34,7 @@ int main(int argc, char** argv) {
         .cpuTimeLimitSeconds = cpuTimeLimit
     };
 
-    executor.Execute(args);
+    std::string outputReportPath = parser.get<std::string>("--output-report-path");
+
+    executor.Execute(args, outputReportPath);
 }
