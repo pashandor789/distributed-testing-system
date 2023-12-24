@@ -46,15 +46,15 @@ TScripts TBuildDataBase::GetScripts(uint64_t buildId) {
     pqxx::nontransaction nonTx(connection_);
     pqxx::result scriptsId = nonTx.exec_params("SELECT * FROM builds WHERE id = $1", buildId);
 
-    uint64_t initScriptId = scriptsId[0][1].as<uint64_t>();
+    uint64_t initScriptId = scriptsId[0][2].as<uint64_t>();
     pqxx::result initScriptRows = nonTx.exec_params("SELECT * FROM init_scripts WHERE id = $1", initScriptId);
 
-    uint64_t executeScriptId = scriptsId[0][2].as<uint64_t>();
+    uint64_t executeScriptId = scriptsId[0][3].as<uint64_t>();
     pqxx::result executeScriptRows = nonTx.exec_params("SELECT * FROM execute_scripts WHERE id = $1", executeScriptId);
 
     return TScripts{
-        .initScript = initScriptRows[0][1].as<std::string>(),
-        .executeScript = executeScriptRows[0][1].as<std::string>()
+        .initScript = initScriptRows[0][2].as<std::string>(),
+        .executeScript = executeScriptRows[0][2].as<std::string>()
     };  
 }
 

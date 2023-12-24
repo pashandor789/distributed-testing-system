@@ -10,13 +10,13 @@
 
 namespace NDTS::NTestingProcessor {
 
-TBrockerClient::TBrockerClient(const TTestingProcessorConfig testingProcessorConfig)
-    : serverURL_(testingProcessorConfig.brocker_client_config().server_url())
-    , queueName_(testingProcessorConfig.brocket_client_config().queue_name())
-    , testingProcessor_(testingProcessorConfig)
+TBrockerClient::TBrockerClient(const TTestingProcessorConfig& config)
+    : serverURL_(config.brocker_client_config().server_url())
+    , queueName_(config.brocker_client_config().queue_name())
+    , testingProcessor_(config)
 {}
 
-TBrockerClient::Run() {
+void TBrockerClient::Run() {
     auto evbase = event_base_new();
 
     AMQP::LibEventHandler handler(evbase);
@@ -28,11 +28,15 @@ TBrockerClient::Run() {
     channel.setQos(1);
 
     channel.consume(queueName_).onReceived(
-        [&channel](const AMQP::Message& message, uint64_t deliveryTag, bool redelivered) {
-            auto requestJson = nlohmann::json::parse(std::move(message.body()), nullptr, false);
+        [&channel, this](const AMQP::Message& message, uint64_t deliveryTag, bool redelivered) {
+            std::cerr << "recievied" << std::endl;
+
+            std::string body(message.body(), message.bodySize());
+
+            auto requestJson = nlohmann::json::parse(std::move(body), nullptr, false);
             auto request = TTestingProcessorRequest(requestJson);
             
-            testingProcessor_.Process(std::move(request));
+            this->testingProcessor_.Process(std::move(request));
 
             channel.ack(deliveryTag);
         }

@@ -31,9 +31,12 @@ grpc::Status TTabascoGRPCServiceImpl::GetBatch(grpc::ServerContext* context, con
 }
 
 grpc::Status TTabascoGRPCServiceImpl::GetScripts(grpc::ServerContext* context, const TGetScriptsRequest* request, TGetScriptsResponse* reply) {
+    std::cerr << "recieved" << std::endl;
+    
     std::string taskId = std::to_string(request->task_id());
     
     TScripts scripts = builds_.GetScripts(request->build_id());
+
     auto [getSuccess, data] = storageClient_.GetData(taskId, "meta.json");
     nlohmann::json metaData = nlohmann::json::parse(std::move(data), nullptr, false);
 

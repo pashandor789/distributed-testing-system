@@ -6,7 +6,8 @@
 #include "docker_container.h"
 #include "testing_processor_request.h"
 
-#include "testing_processor_config.pb.h"
+#include "proto/testing_processor_config.pb.h"
+#include "task_batcher_storage_coordinator/grpc/proto/tabasco_grpc.grpc.pb.h"
 
 namespace NDTS::NTestingProcessor {
 
@@ -19,7 +20,7 @@ public:
     void Process(TTestingProcessorRequest request);
 
 private:
-    bool Prepare(TTestingProcessorRequest& request, uint64* const batchCount);
+    bool Prepare(TTestingProcessorRequest& request, uint64_t* const batchCount);
 
     std::vector<TTestingReport> Test(TTestingProcessorRequest& request, uint64_t batchCount);
 
@@ -27,7 +28,7 @@ private:
 
 private:
     TDockerContainer container_;
-    std::shared_ptr<TTabascoGRPC::Stub> tabasco_;
+    std::shared_ptr<NTabasco::TTabascoGRPC::Stub> tabasco_;
     std::filesystem::path localStoragePath_;
 };
 

@@ -18,11 +18,11 @@ TExecVArgs GetExecCommandArgs(const std::string& containerId, std::vector<std::s
 }
 
 TDockerContainer::TDockerContainer(const TDockerContainerConfig& config) 
-    : image_(config.imagename())
-    , cpuCount_(config.cpucount())
-    , memoryLimit_(config.memorylimit())
-    , memorySwapLimit_(config.memoryswaplimit())
-    , pidLimit_(config.pidlimit())
+    : image_(config.image_name())
+    , cpuCount_(config.cpu_count())
+    , memoryLimit_(config.memory_limit())
+    , memorySwapLimit_(config.memory_swap_limit())
+    , pidLimit_(config.pid_limit())
 {}
 
 void TDockerContainer::Run() {
@@ -77,7 +77,7 @@ int TDockerContainer::Exec(
 
     int stat = 0;
     waitpid(pid, &stat, 0);
-    int exitCode = !WEXITED(stat) || WEXITSTATUS(stat);
+    int exitCode = !WIFEXITED(stat) || WEXITSTATUS(stat);
     return exitCode; 
 }
 
@@ -88,7 +88,7 @@ void TDockerContainer::Kill() {
         .append(" ")
         .append(containerId_);
 
-    std::system(command.c_str());
+    // std::system(command.c_str());
 }
 
 void TDockerContainer::MoveFileInside(const fs::path& outsidePath, const fs::path& containerPath) {
@@ -98,7 +98,7 @@ void TDockerContainer::MoveFileInside(const fs::path& outsidePath, const fs::pat
         .append(" ")
         .append(outsidePath)
         .append(" ")
-        .append(std::to_string(containerId_))
+        .append(containerId_)
         .append(":")
         .append(containerPath);
 
@@ -112,7 +112,22 @@ void TDockerContainer::Remove() {
         .append(" ")
         .append(containerId_);
 
-    std::system(command.c_str());  
+    // std::system(command.c_str());  
+}
+
+void TDockerContainer::CreateFile(const fs::path& path, std::string content) {
+    std::string echoCommand;
+
+    echoCommand
+        .append("\'")
+        .append("/usr/bin/echo")
+        .append(" ")
+        .append(std::move(content))
+        .append(" > ")
+        .append(path)
+        .append("\'");
+
+    Exec({"sh", "-c", content, ">", path}, std::nullopt, std::nullopt);
 }
 
 TDockerContainer::~TDockerContainer() {

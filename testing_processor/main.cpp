@@ -32,9 +32,9 @@ int main(int argc, char** argv) {
     testingProcessors.reserve(config.instance_count());
 
     for (size_t i = 0; i < config.instance_count(); ++i) {
-        testingProcessors.push_back(
+        testingProcessors.emplace_back(
             [&config]() {
-                TBrockerClient client(config);
+                NDTS::NTestingProcessor::TBrockerClient client(config);
                 client.Run();
             }
         );

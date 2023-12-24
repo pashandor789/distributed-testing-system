@@ -9,12 +9,12 @@ namespace NDTS::NTestingProcessor {
 
 namespace fs = std::filesystem;
 
-static const std::fs::path USER_ROOT_PATH = "/check";
-static const std::fs::path INIT_SCRIPT_PATH = USER_ROOT_PATH / "init.sh";
-static const std::fs::path EXECUTE_SCRIPT_PATH = USER_ROOT_PATH / "execute.sh";
-static const std::fs::path USER_DATA_PATH = USER_ROOT_PATH / "userData";
-static const std::fs::path USER_EXECUTABLE_PATH = USER_ROOT_PATH / "executable";
-static const std::fs::path CHECKER_PATH = "diff";
+static const fs::path USER_ROOT_PATH = "/check";
+static const fs::path INIT_SCRIPT_PATH = USER_ROOT_PATH / "init.sh";
+static const fs::path EXECUTE_SCRIPT_PATH = USER_ROOT_PATH / "execute.sh";
+static const fs::path USER_DATA_PATH = USER_ROOT_PATH / "userData";
+static const fs::path USER_EXECUTABLE_PATH = USER_ROOT_PATH / "executable";
+static const fs::path CHECKER_PATH = "diff";
 
 enum class TVerdict {
     OK = 0,
@@ -23,7 +23,7 @@ enum class TVerdict {
     ML = 3,
     RE = 4,
     CRASH = 5
-}
+};
 
 struct TTestingReport {
     TTestingReport(uint64_t cpuTimeElapsedMicroSeconds, uint64_t memorySpent)
@@ -35,30 +35,32 @@ struct TTestingReport {
     TVerdict verdict;
     uint64_t cpuTimeElapsedMicroSeconds;
     uint64_t memorySpent;
-}
+};
 
 TTestingProcessor::TTestingProcessor(const TTestingProcessorConfig& config)
     : container_(config.docker_container_config())
+    , tabasco_(NTabasco::TTabascoGRPC::NewStub(grpc::CreateChannel(config.tabasco_url(), grpc::InsecureChannelCredentials())))
 {}
 
-TTestingProcessor::Process(TTestingProcessorRequest request) {
+void TTestingProcessor::Process(TTestingProcessorRequest request) {
     container_.Run();
 
-    Prepare(request);
-    auto report = Test(request);
+    uint64_t batchCount = 0;
+    Prepare(request, &batchCount);
+    auto report = Test(request, batchCount);
     Commit(std::move(report));
 
     container_.Kill();
 }
 
-bool TTestingProcessor::Prepare(TTestingProcessorRequest& request, uint64* const batchCount) {
-    TTabascoRequestTask tabascoRequestTask;
+bool TTestingProcessor::Prepare(TTestingProcessorRequest& request, uint64_t* const batchCount) {
+    TTabascoRequestTask tabascoRequestTask(tabasco_);
 
-    TGetScriptsResponse response = tabascoRequestTask.GetScripts(request.taskId, request.buildId);
+    TGetScriptsResponse scripts = tabascoRequestTask.GetScripts(request.taskId, request.buildId);
 
     container_.CreateFile(INIT_SCRIPT_PATH, std::move(scripts.initScript));
     container_.CreateFile(USER_DATA_PATH, std::move(request.userData));
-    *batchCount = response.batchCount;
+    *batchCount = scripts.batchCount;
 
     int exitCode = container_.Exec(
         {INIT_SCRIPT_PATH, USER_DATA_PATH},
@@ -75,10 +77,10 @@ bool TTestingProcessor::Prepare(TTestingProcessorRequest& request, uint64* const
 }
 
 TVerdict CheckOutput(
-    const std::fs::path& checkerPath,
-    const std::fs::path& outputTestPath,
-    const std::fs::path& userOutputPath,
-    const std::fs::path& inputTestPath
+    const fs::path& checkerPath,
+    const fs::path& outputTestPath,
+    const fs::path& userOutputPath,
+    const fs::path& inputTestPath
 ) {
     std::string checkerLauncherCommand;
 
@@ -89,13 +91,13 @@ TVerdict CheckOutput(
         .append(" ")
         .append(outputTestPath);
 
-    int checkerExitCode = system(checkerLauncherCommand);
+    int checkerExitCode = system(checkerLauncherCommand.c_str());
 
     if (checkerExitCode == 0) {
         return TVerdict::OK;
     }
 
-    if (checkerExitCode == TVerdict::WA) {
+    if (checkerExitCode == static_cast<int>(TVerdict::WA)) {
         return TVerdict::WA;
     }
 
@@ -103,9 +105,9 @@ TVerdict CheckOutput(
 }
 
 void DumpTests(
-    const std::fs::path& inputTestPath,
+    const fs::path& inputTestPath,
     const std::string& inputTest,
-    const std::fs::path& outputTest,
+    const fs::path& outputTestPath,
     const std::string& outputTest
 ) {
     std::ofstream inputTestFile(inputTestPath);
@@ -116,7 +118,7 @@ void DumpTests(
 }
 
 std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& request, uint64_t batchCount) {
-    TTabascoRequestTask tabascoRequestTask;
+    TTabascoRequestTask tabascoRequestTask(tabasco_);
 
     std::vector<TTestingReport> report;
 
@@ -127,15 +129,15 @@ std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& re
         size_t testsSize = tests.inputTests.size();
 
         for (size_t i = 0; i < testsSize; ++i) {
-            std::fs::path inputTestPath = localStoragePath_ / "input.txt";
-            std::fs::path outputTestPath = localStoragePath_ / "output.txt";
-            std::fs::path userOutputPath = localStoragePath_ / "userOutput.txt"
+            fs::path inputTestPath = localStoragePath_ / "input.txt";
+            fs::path outputTestPath = localStoragePath_ / "output.txt";
+            fs::path userOutputPath = localStoragePath_ / "userOutput.txt";
 
             DumpTests(inputTestPath, tests.inputTests[i], outputTestPath, tests.outputTests[i]);
 
             container_.Exec(
                 {EXECUTE_SCRIPT_PATH, USER_EXECUTABLE_PATH},
-                inputPath,
+                inputTestPath,
                 userOutputPath
             );
 
@@ -179,11 +181,11 @@ std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& re
 void TTestingProcessor::Commit(std::vector<TTestingReport>&& report) {
     for (size_t i = 0; i < report.size(); ++i) {
         printf(
-            "commited test #%ld %ld %ld %ld",
+            "commited test #%ld %ld %ld %d",
             i + 1,
             report[i].cpuTimeElapsedMicroSeconds,
             report[i].memorySpent,
-            report[i].verdict
+            static_cast<int>(report[i].verdict)
         );
     }
 }

@@ -6,7 +6,6 @@ set(
     brocker_client.proto
     docker_container.proto
     testing_processor_config.proto
-    testing_processor_request.proto
 )
 
 set(PROTOBUF_GENERATED_DIR ${CMAKE_CURRENT_BINARY_DIR})
