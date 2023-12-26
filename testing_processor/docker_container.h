@@ -11,6 +11,12 @@ namespace NDTS::NTestingProcessor {
 
 namespace fs = std::filesystem;
 
+struct TDockerExecOptions {
+    std::optional<fs::path> stdIn = std::nullopt;
+    std::optional<fs::path> stdOut = std::nullopt;
+    std::optional<fs::path> workingDir = std::nullopt;
+};
+
 class TDockerContainer {
 public:
     TDockerContainer(const TDockerContainerConfig& config);
@@ -20,8 +26,12 @@ public:
     // return's exit code
     int Exec(
         std::vector<std::string> scriptArgs, 
-        const std::optional<fs::path>& stdIn,
-        const std::optional<fs::path>& stdOut
+        TDockerExecOptions options = {}
+    );
+
+    int ExecBash(
+        std::vector<std::string> scriptArgs, 
+        TDockerExecOptions options = {}
     );
 
     void MoveFileInside(const fs::path& outsidePath, const fs::path& insidePath);

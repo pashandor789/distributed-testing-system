@@ -10,11 +10,16 @@ namespace NDTS::NTestingProcessor {
 namespace fs = std::filesystem;
 
 static const fs::path USER_ROOT_PATH = "/check";
-static const fs::path INIT_SCRIPT_PATH = USER_ROOT_PATH / "init.sh";
-static const fs::path EXECUTE_SCRIPT_PATH = USER_ROOT_PATH / "execute.sh";
+static const fs::path INIT_SCRIPT_FILE = "init.sh";
+static const fs::path INIT_SCRIPT_PATH = USER_ROOT_PATH / INIT_SCRIPT_FILE;
+static const fs::path EXECUTE_SCRIPT_FILE = "execute.sh";
+static const fs::path EXECUTE_SCRIPT_PATH = USER_ROOT_PATH / EXECUTE_SCRIPT_FILE;
 static const fs::path USER_DATA_PATH = USER_ROOT_PATH / "userData";
-static const fs::path USER_EXECUTABLE_PATH = USER_ROOT_PATH / "executable";
+static const fs::path USER_EXECUTABLE_FILE = "executable";
+static const fs::path USER_EXECUTABLE_PATH = USER_ROOT_PATH / USER_EXECUTABLE_FILE;
 static const fs::path CHECKER_PATH = "diff";
+static const fs::path EXECUTOR_SCRIPT_FILE = "executor";
+static const fs::path EXECUTOR_SCRIPT_PATH = USER_ROOT_PATH / EXECUTOR_SCRIPT_FILE;
 
 enum class TVerdict {
     OK = 0,
@@ -43,6 +48,8 @@ TTestingProcessor::TTestingProcessor(const TTestingProcessorConfig& config)
 {}
 
 void TTestingProcessor::Process(TTestingProcessorRequest request) {
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
     container_.Run();
 
     uint64_t batchCount = 0;
@@ -51,6 +58,12 @@ void TTestingProcessor::Process(TTestingProcessorRequest request) {
     Commit(std::move(report));
 
     container_.Kill();
+
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+
+    uint64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
+
+    std::cout << 1.0 * time / 1000 << " seconds" << std::endl;
 }
 
 bool TTestingProcessor::Prepare(TTestingProcessorRequest& request, uint64_t* const batchCount) {
@@ -59,13 +72,14 @@ bool TTestingProcessor::Prepare(TTestingProcessorRequest& request, uint64_t* con
     TGetScriptsResponse scripts = tabascoRequestTask.GetScripts(request.taskId, request.buildId);
 
     container_.CreateFile(INIT_SCRIPT_PATH, std::move(scripts.initScript));
+    container_.Exec({"chmod", "+x", INIT_SCRIPT_PATH});
+
     container_.CreateFile(USER_DATA_PATH, std::move(request.userData));
     *batchCount = scripts.batchCount;
 
-    int exitCode = container_.Exec(
-        {INIT_SCRIPT_PATH, USER_DATA_PATH},
-        std::nullopt,
-        std::nullopt
+    int exitCode = container_.ExecBash(
+        {INIT_SCRIPT_FILE, USER_DATA_PATH},
+        {.workingDir = USER_ROOT_PATH}
     );
 
     if (exitCode != 0) {
@@ -73,6 +87,7 @@ bool TTestingProcessor::Prepare(TTestingProcessorRequest& request, uint64_t* con
     }
 
     container_.CreateFile(EXECUTE_SCRIPT_PATH, std::move(scripts.executeScript));
+    container_.Exec({"chmod", "+x", EXECUTE_SCRIPT_PATH});
     return true;
 }
 
@@ -117,6 +132,19 @@ void DumpTests(
     outputTestFile << outputTest;
 }
 
+std::string FetchFileContent(const fs::path& filePath) {
+    std::string fileContent;
+    std::ifstream file(filePath);
+
+    file.seekg(0, std::ios::end);
+    size_t contentSize = file.tellg();
+    fileContent.resize(contentSize, '\0');
+    file.seekg(0);
+    file.read(&fileContent[0], static_cast<std::streamsize>(contentSize));
+
+    return fileContent;
+}
+
 std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& request, uint64_t batchCount) {
     TTabascoRequestTask tabascoRequestTask(tabasco_);
 
@@ -136,12 +164,13 @@ std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& re
             DumpTests(inputTestPath, tests.inputTests[i], outputTestPath, tests.outputTests[i]);
 
             container_.Exec(
-                {EXECUTE_SCRIPT_PATH, USER_EXECUTABLE_PATH},
-                inputTestPath,
-                userOutputPath
+                {EXECUTOR_SCRIPT_PATH, "--execute", EXECUTE_SCRIPT_PATH, "--cpu-time-limit", std::to_string(request.cpuTimeLimitMilliSeconds)},
+                {.stdIn = inputTestPath, .stdOut = userOutputPath, .workingDir = USER_ROOT_PATH}
             );
 
-            std::string deserializedReport;
+            container_.Exec({"cat", "report.json"}, {.stdOut = localStoragePath_ / "report.json", .workingDir = USER_ROOT_PATH});
+
+            std::string deserializedReport = FetchFileContent(localStoragePath_ / "report.json");
             nlohmann::json executeReport = nlohmann::json::parse(deserializedReport, nullptr, false);
 
             report.emplace_back(
@@ -154,7 +183,7 @@ std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& re
                 return report;
             }
 
-            if (executeReport["cpuTimeElapsedMicroSeconds"] > request.cpuTimeLimitSeconds * 1'000'000) {
+            if (executeReport["cpuTimeElapsedMicroSeconds"] > request.cpuTimeLimitMilliSeconds * 1'000) {
                 report.back().verdict = TVerdict::TL;
                 return report;
             }
@@ -181,7 +210,7 @@ std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& re
 void TTestingProcessor::Commit(std::vector<TTestingReport>&& report) {
     for (size_t i = 0; i < report.size(); ++i) {
         printf(
-            "commited test #%ld %ld %ld %d",
+            "commited test #%ld %ld %ld %d\n",
             i + 1,
             report[i].cpuTimeElapsedMicroSeconds,
             report[i].memorySpent,

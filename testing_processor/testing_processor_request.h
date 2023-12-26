@@ -13,7 +13,7 @@ struct TTestingProcessorRequest {
         , userData(std::move(json["userData"]))
         , taskId(json["taskId"])
         , memoryLimit(json["memoryLimit"])
-        , cpuTimeLimitSeconds(json["cpuTimeLimitSeconds"])
+        , cpuTimeLimitMilliSeconds(json["cpuTimeLimitMilliSeconds"])
     {}
 
     uint64_t submissionId;
@@ -21,7 +21,7 @@ struct TTestingProcessorRequest {
     std::string userData;
     uint64_t taskId;
     uint64_t memoryLimit;
-    float cpuTimeLimitSeconds;
+    uint64_t cpuTimeLimitMilliSeconds;
 };
 
 } // end of NDTS::NTestingProcessor namespace
