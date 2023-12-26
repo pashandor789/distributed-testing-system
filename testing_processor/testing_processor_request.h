@@ -22,6 +22,7 @@ struct TTestingProcessorRequest {
     uint64_t taskId;
     uint64_t memoryLimit;
     uint64_t cpuTimeLimitMilliSeconds;
+    uint64_t batchCount = 0;
 };
 
 } // end of NDTS::NTestingProcessor namespace

@@ -20,9 +20,9 @@ public:
     void Process(TTestingProcessorRequest request);
 
 private:
-    bool Prepare(TTestingProcessorRequest& request, uint64_t* const batchCount);
+    bool Prepare(TTestingProcessorRequest& request);
 
-    std::vector<TTestingReport> Test(TTestingProcessorRequest& request, uint64_t batchCount);
+    std::vector<TTestingReport> Test(TTestingProcessorRequest& request);
 
     void Commit(std::vector<TTestingReport>&& report);
 

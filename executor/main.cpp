@@ -12,9 +12,9 @@ int main(int argc, char** argv) {
         .scan<'i', uint64_t>();
 
     parser
-        .add_argument("-e", "--executable-path")
+        .add_argument("-e", "--execute")
         .required()
-        .help("path to executable file");
+        .help("string to execute, for example: '/usr/bin/ls -a'");
 
     parser
         .add_argument("-o", "--output-report-path")
@@ -23,18 +23,18 @@ int main(int argc, char** argv) {
 
     parser.parse_args(argc, argv);
 
-    std::string executablePath = parser.get<std::string>("--executable-path");
+    std::string execute = parser.get<std::string>("--execute");
     uint64_t cpuTimeLimit = parser.get<uint64_t>("--cpu-time-limit");
+    std::string outputReportFile = parser.get<std::string>("--output-report-path");
 
     NDTS::NExecutor::TExecutor executor;
 
     NDTS::NExecutor::TExecutorArgs args = 
     {
-        .executablePath = std::move(executablePath),
-        .cpuTimeLimitSeconds = cpuTimeLimit
+        .execute = std::move(execute),
+        .cpuTimeLimitSeconds = cpuTimeLimit,
+        .outputReportFile = std::move(outputReportFile)
     };
 
-    std::string outputReportPath = parser.get<std::string>("--output-report-path");
-
-    executor.Execute(args, outputReportPath);
+    executor.Execute(args);
 }

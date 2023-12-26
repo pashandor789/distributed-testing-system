@@ -4,8 +4,8 @@
 
 namespace NDTS::NTabasco {
 
-static const std::string INPUT_TEST_SUFFIX = "test";
-static const std::string OUTPUT_TEST_SUFFIX = "answer";
+static const std::string INPUT_TEST_SUFFIX = "input";
+static const std::string OUTPUT_TEST_SUFFIX = "output";
 
 static const char TEST_NUM_SEPARATOR = '_';
 

@@ -23,8 +23,8 @@ int pidFdOpen(pid_t pid) {
     return static_cast<int>(syscall(__NR_pidfd_open, pid, 0));
 }
 
-void TExecutor::Execute(const TExecutorArgs& executorArgs, const std::filesystem::path& outputReportFile) {
-    TExecVArgs execVArgs(executorArgs.executablePath, {executorArgs.executablePath});
+void TExecutor::Execute(const TExecutorArgs& executorArgs) {
+    TExecVArgs execVArgs("/usr/bin/sh", {"/usr/bin/sh", "-c", executorArgs.execute});
 
     pid_t pid = fork();
 
@@ -40,6 +40,8 @@ void TExecutor::Execute(const TExecutorArgs& executorArgs, const std::filesystem
         setrlimit(RLIMIT_CPU, &limit);
 
         execv(execVArgs.GetPathName(), execVArgs.GetArgV());
+
+        perror("error: ");
         exit(1);
     }
 
@@ -79,7 +81,7 @@ void TExecutor::Execute(const TExecutorArgs& executorArgs, const std::filesystem
     report["memorySpent"] = static_cast<uint64_t>(processInfo.ru_maxrss);
     report["exitCode"] = exitCode;
 
-    std::ofstream output(outputReportFile);
+    std::ofstream output(executorArgs.outputReportFile);
 
     output << report.dump();
     output.flush();

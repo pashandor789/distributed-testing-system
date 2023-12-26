@@ -17,7 +17,7 @@ static const fs::path EXECUTE_SCRIPT_PATH = USER_ROOT_PATH / EXECUTE_SCRIPT_FILE
 static const fs::path USER_DATA_PATH = USER_ROOT_PATH / "userData";
 static const fs::path USER_EXECUTABLE_FILE = "executable";
 static const fs::path USER_EXECUTABLE_PATH = USER_ROOT_PATH / USER_EXECUTABLE_FILE;
-static const fs::path CHECKER_PATH = "diff";
+static const fs::path CHECKER_PATH = "/usr/bin/diff";
 static const fs::path EXECUTOR_SCRIPT_FILE = "executor";
 static const fs::path EXECUTOR_SCRIPT_PATH = USER_ROOT_PATH / EXECUTOR_SCRIPT_FILE;
 
@@ -48,25 +48,17 @@ TTestingProcessor::TTestingProcessor(const TTestingProcessorConfig& config)
 {}
 
 void TTestingProcessor::Process(TTestingProcessorRequest request) {
-    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-
     container_.Run();
 
     uint64_t batchCount = 0;
-    Prepare(request, &batchCount);
-    auto report = Test(request, batchCount);
+    Prepare(request);
+    auto report = Test(request);
     Commit(std::move(report));
 
     container_.Kill();
-
-    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-
-    uint64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
-
-    std::cout << 1.0 * time / 1000 << " seconds" << std::endl;
 }
 
-bool TTestingProcessor::Prepare(TTestingProcessorRequest& request, uint64_t* const batchCount) {
+bool TTestingProcessor::Prepare(TTestingProcessorRequest& request) {
     TTabascoRequestTask tabascoRequestTask(tabasco_);
 
     TGetScriptsResponse scripts = tabascoRequestTask.GetScripts(request.taskId, request.buildId);
@@ -75,7 +67,7 @@ bool TTestingProcessor::Prepare(TTestingProcessorRequest& request, uint64_t* con
     container_.Exec({"chmod", "+x", INIT_SCRIPT_PATH});
 
     container_.CreateFile(USER_DATA_PATH, std::move(request.userData));
-    *batchCount = scripts.batchCount;
+    request.batchCount = scripts.batchCount;
 
     int exitCode = container_.ExecBash(
         {INIT_SCRIPT_FILE, USER_DATA_PATH},
@@ -145,14 +137,12 @@ std::string FetchFileContent(const fs::path& filePath) {
     return fileContent;
 }
 
-std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& request, uint64_t batchCount) {
+std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& request) {
     TTabascoRequestTask tabascoRequestTask(tabasco_);
 
     std::vector<TTestingReport> report;
 
-    size_t testIndex = 1;
-
-    for (size_t batchIndex = 0; batchIndex < batchCount; ++batchIndex) {
+    for (size_t batchIndex = 0; batchIndex < request.batchCount; ++batchIndex) {
         TGetBatchResponse tests = tabascoRequestTask.GetBatch(request.taskId, batchIndex);
         size_t testsSize = tests.inputTests.size();
 
@@ -163,8 +153,9 @@ std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& re
 
             DumpTests(inputTestPath, tests.inputTests[i], outputTestPath, tests.outputTests[i]);
 
+            std::string cpuTLMS = std::to_string(request.cpuTimeLimitMilliSeconds);
             container_.Exec(
-                {EXECUTOR_SCRIPT_PATH, "--execute", EXECUTE_SCRIPT_PATH, "--cpu-time-limit", std::to_string(request.cpuTimeLimitMilliSeconds)},
+                {EXECUTOR_SCRIPT_PATH, "--execute", EXECUTE_SCRIPT_PATH, "--cpu-time-limit", std::move(cpuTLMS)},
                 {.stdIn = inputTestPath, .stdOut = userOutputPath, .workingDir = USER_ROOT_PATH}
             );
 
@@ -199,8 +190,6 @@ std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& re
                 report.back().verdict = checkerVerdict;
                 return report;
             }
-
-            ++testIndex;
         }
     }
 
