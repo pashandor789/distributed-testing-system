@@ -45,6 +45,7 @@ struct TTestingReport {
 TTestingProcessor::TTestingProcessor(const TTestingProcessorConfig& config)
     : container_(config.docker_container_config())
     , tabasco_(NTabasco::TTabascoGRPC::NewStub(grpc::CreateChannel(config.tabasco_url(), grpc::InsecureChannelCredentials())))
+    , localStoragePath_(config.local_storage_path())
 {}
 
 void TTestingProcessor::Process(TTestingProcessorRequest request) {

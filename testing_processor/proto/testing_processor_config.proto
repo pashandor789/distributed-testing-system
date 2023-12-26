@@ -9,5 +9,6 @@ message TTestingProcessorConfig {
     TDockerContainerConfig docker_container_config = 1;
     TBrockerClientConfig brocker_client_config = 2;
     string tabasco_url = 3;
-    uint64 instance_count = 4;
+    uint64 instance_count = 4; // thread count
+    string local_storage_path = 5; // specified in main.cpp
 }

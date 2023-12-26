@@ -54,9 +54,12 @@ void TDockerContainer::Run() {
 
     FILE* dockerOut = popen(command.c_str(), "r");
 
+    std::string containerId;
     for (auto ch = fgetc(dockerOut); ch != EOF && ch != '\n'; ch = fgetc(dockerOut)) {
-        containerId_.push_back(ch);
+        containerId.push_back(ch);
     }
+
+    containerId_ = std::move(containerId);
 
     fclose(dockerOut);
 }
@@ -108,8 +111,6 @@ void TDockerContainer::Kill() {
         .append(containerId_);
 
     std::system(command.c_str());
-
-    containerId_.clear();
 }
 
 void TDockerContainer::MoveFileInside(const fs::path& outsidePath, const fs::path& containerPath) {

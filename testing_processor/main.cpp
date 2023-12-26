@@ -33,8 +33,18 @@ int main(int argc, char** argv) {
 
     for (size_t i = 0; i < config.instance_count(); ++i) {
         testingProcessors.emplace_back(
-            [&config]() {
-                NDTS::NTestingProcessor::TBrockerClient client(config);
+            [i, &config]() {
+                NDTS::NTestingProcessor::TTestingProcessorConfig instanceConfig = config;
+
+                std::filesystem::path localStoragePath = std::to_string(i);
+
+                if (!std::filesystem::exists(localStoragePath) && !std::filesystem::create_directory(localStoragePath)) {
+                    throw std::runtime_error("can't create local storage for: " + localStoragePath.string());
+                }
+
+                instanceConfig.set_local_storage_path(localStoragePath);
+
+                NDTS::NTestingProcessor::TBrockerClient client(instanceConfig);
                 client.Run();
             }
         );
