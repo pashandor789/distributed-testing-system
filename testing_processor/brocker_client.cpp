@@ -1,7 +1,8 @@
 #include "brocker_client.h"
 
+#include <ev.h>
 #include <amqpcpp.h>
-#include <amqpcpp/libevent.h>
+#include <amqpcpp/libev.h>
 
 #include <nlohmann/json.hpp>
 
@@ -17,9 +18,9 @@ TBrockerClient::TBrockerClient(const TTestingProcessorConfig& config)
 {}
 
 void TBrockerClient::Run() {
-    auto evbase = event_base_new();
+    auto *loop = ev_loop_new(0);
 
-    AMQP::LibEventHandler handler(evbase);
+    AMQP::LibEvHandler handler(loop);
     AMQP::TcpConnection connection(&handler, AMQP::Address(serverURL_.c_str()));
 
     AMQP::TcpChannel channel(&connection);
@@ -42,9 +43,11 @@ void TBrockerClient::Run() {
         }
     );
 
+    std::cerr << "here we go" << std::endl;
 
-    event_base_dispatch(evbase);
-    event_base_free(evbase);
+    ev_run(loop, 0);
+
+    std::cerr << "died!" << std::endl;
 }
 
 } // end of NDTS::NTestingProcessor namespace

@@ -49,14 +49,24 @@ TTestingProcessor::TTestingProcessor(const TTestingProcessorConfig& config)
 {}
 
 void TTestingProcessor::Process(TTestingProcessorRequest request) {
+
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
     container_.Run();
 
     uint64_t batchCount = 0;
     Prepare(request);
     auto report = Test(request);
-    Commit(std::move(report));
+    // Commit(std::move(report));
 
     container_.Kill();
+
+    
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+
+    uint64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
+
+    std::cout << 1.0 * time / 1000  << std::endl;
 }
 
 bool TTestingProcessor::Prepare(TTestingProcessorRequest& request) {

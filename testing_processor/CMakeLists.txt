@@ -26,5 +26,5 @@ target_link_libraries(
     testing_processor_proto
     tabasco_grpc_proto
     amqpcpp
-    event
+    ev
 )
