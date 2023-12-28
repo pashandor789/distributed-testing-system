@@ -18,6 +18,11 @@ add_library(
     ${PROTO_HDRS}
 )
 
+target_include_directories( 
+    tabasco_common_proto
+    PUBLIC ${CMAKE_BINARY_DIR}
+) # for including pb.h files
+
 target_link_libraries(
     tabasco_common_proto
     protobuf::libprotobuf

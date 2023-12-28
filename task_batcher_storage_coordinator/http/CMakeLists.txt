@@ -12,8 +12,6 @@ add_executable(
     handler_callbacks.cpp
 )
 
-include_directories(${CMAKE_BINARY_DIR})
-
 set(TABASCO_ROOT_DIR ${CMAKE_SOURCE_DIR}/..)
 set(COMMON_DIR ${TABASCO_ROOT_DIR}/common)
 add_subdirectory(${COMMON_DIR} common)

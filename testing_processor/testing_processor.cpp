@@ -148,6 +148,10 @@ std::string FetchFileContent(const fs::path& filePath) {
     return fileContent;
 }
 
+/* 
+    TODO:   
+        1) Make tests upload async
+*/
 std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& request) {
     TTabascoRequestTask tabascoRequestTask(tabasco_);
 
