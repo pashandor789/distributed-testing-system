@@ -16,3 +16,7 @@ target_link_libraries(
     pqxx
     pq
 )
+
+if (DTS_TEST)
+    add_subdirectory(test)
+endif()

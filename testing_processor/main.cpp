@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
     std::fstream input(configPath, std::ios::in);
     google::protobuf::io::IstreamInputStream stream(&input);
 
-    if (!google::protobuf::TextFormat::Parse(&stream, &config)) {
+    if (!input.is_open() || !google::protobuf::TextFormat::Parse(&stream, &config)) {
         throw std::runtime_error("can't parse config");
     }
 

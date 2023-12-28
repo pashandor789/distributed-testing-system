@@ -20,6 +20,6 @@ target_link_libraries(
     bsoncxx
 )
 
-if (TEST)
+if (DTS_TEST)
     add_subdirectory(test)
 endif()
