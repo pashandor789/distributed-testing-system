@@ -14,7 +14,7 @@ include_directories(${CMAKE_BINARY_DIR})
 
 add_subdirectory(proto)
 
-set(TABASCO_ROOT_DIR ${CMAKE_SOURCE_DIR}/..)
+set(TABASCO_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
 set(COMMON_DIR ${TABASCO_ROOT_DIR}/common)
 add_subdirectory(${COMMON_DIR} common)
 include_directories(${TABASCO_ROOT_DIR})

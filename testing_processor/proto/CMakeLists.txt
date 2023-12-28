@@ -22,3 +22,8 @@ target_link_libraries(
     testing_processor_proto
     protobuf::libprotobuf
 )
+
+target_include_directories( 
+    testing_processor_proto
+    PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/..
+)

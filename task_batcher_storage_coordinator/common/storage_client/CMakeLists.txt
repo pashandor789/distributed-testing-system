@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(storage_client)
+include_guard(GLOBAL)
 
 include_directories(/usr/local/include/mongocxx/v_noabi/)
 include_directories(/usr/local/include/bsoncxx/v_noabi/)
@@ -10,10 +10,8 @@ add_library(
     storage_client.cpp
 )
 
-if (NOT TARGET tabasco_common_proto)
-    set(COMMON_PROTO_DIR ${CMAKE_SOURCE_DIR}/../proto)
-    add_subdirectory(${COMMON_PROTO_DIR} common/proto)
-endif() 
+set(COMMON_PROTO_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../proto)
+add_subdirectory(${COMMON_PROTO_DIR} common/proto)
 
 target_link_libraries(
     tabasco_storage_client
