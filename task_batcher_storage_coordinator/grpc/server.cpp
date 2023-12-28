@@ -20,8 +20,8 @@ grpc::Status TTabascoGRPCServiceImpl::GetBatch(grpc::ServerContext* context, con
     auto batches = std::move(metaData["batches"]);
 
     for (size_t i = 0; i < batches[batchId].size(); ++i) {
-        auto [inputOk, inputTest] = storageClient_.GetData(taskId, std::to_string(batches[batchId][i].get<int>()) + "_test");
-        auto [outputOk, outputTest] = storageClient_.GetData(taskId, std::to_string(batches[batchId][i].get<int>()) + "_answer");
+        auto [inputOk, inputTest] = storageClient_.GetData(taskId, std::to_string(batches[batchId][i].get<int>()) + "_input");
+        auto [outputOk, outputTest] = storageClient_.GetData(taskId, std::to_string(batches[batchId][i].get<int>()) + "_output");
 
         reply->add_input(std::move(inputTest));
         reply->add_output(std::move(outputTest));

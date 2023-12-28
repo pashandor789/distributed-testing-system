@@ -1,6 +1,7 @@
 #pragma once
 
 #include <crow.h>
+#include <nlohmann/json.hpp>
 
 #include "server.h"
 
