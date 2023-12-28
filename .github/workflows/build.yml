@@ -16,5 +16,5 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DTS_TEST=on
+          cmake .. -DDTS_TEST=on
           cmake --build .
