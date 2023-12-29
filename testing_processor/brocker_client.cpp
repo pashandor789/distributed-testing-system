@@ -6,6 +6,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include <syncstream>
+
 #include "testing_processor.h"
 #include "testing_processor_request.h"
 
@@ -41,6 +43,8 @@ void TBrockerClient::Run() {
         }
     );
 
+
+    std::cerr << "Started instance of TBrockerClient with TTestingProcessor" << std::endl;
     ev_run(loop, 0);
 }
 

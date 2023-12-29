@@ -18,8 +18,7 @@ TGetScriptsResponse TTabascoRequestTask::GetScripts(uint64_t taskId, uint64_t bu
     grpc::Status status = tabasco_->GetScripts(&context, request, &response);
 
     if (!status.ok()) {
-        std::cerr << response.init_script() << std::endl;
-        std::cerr << status.error_message() << std::endl;
+        std::cerr << "tabasco grpc error: " << status.error_message() << std::endl;
     }
 
     return TGetScriptsResponse{

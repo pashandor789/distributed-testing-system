@@ -7,8 +7,7 @@ namespace NDTS::NTabasco {
 TTabascoGRPCServiceImpl::TTabascoGRPCServiceImpl(const TTabascoServerConfig& config)
     : storageClient_(config.storage_client_config())
     , builds_(config.build_data_base_config())
-{
-}
+{}
 
 grpc::Status TTabascoGRPCServiceImpl::GetBatch(grpc::ServerContext* context, const TGetBatchRequest* request, TGetBatchResponse* reply) {
     std::string taskId = std::to_string(request->task_id());
@@ -39,10 +38,10 @@ grpc::Status TTabascoGRPCServiceImpl::GetScripts(grpc::ServerContext* context, c
     nlohmann::json metaData = nlohmann::json::parse(std::move(data), nullptr, false);
 
     size_t batchCount = metaData["batches"].size();
-
+    reply->set_batch_count(batchCount);
+    
     reply->set_init_script(std::move(scripts.initScript));
     reply->set_execute_script(std::move(scripts.executeScript));
-    reply->set_batch_count(batchCount);
 
     return grpc::Status::OK;
 }
