@@ -54,7 +54,6 @@ void TTestingProcessor::Process(TTestingProcessorRequest request) {
 
     container_.Run();
 
-    uint64_t batchCount = 0;
     Prepare(request);
     auto report = Test(request);
     // Commit(std::move(report));

@@ -30,8 +30,6 @@ void TBrockerClient::Run() {
 
     channel.consume(queueName_).onReceived(
         [&channel, this](const AMQP::Message& message, uint64_t deliveryTag, bool redelivered) {
-            std::cerr << "recievied" << std::endl;
-
             std::string body(message.body(), message.bodySize());
 
             auto requestJson = nlohmann::json::parse(std::move(body), nullptr, false);
@@ -43,11 +41,7 @@ void TBrockerClient::Run() {
         }
     );
 
-    std::cerr << "here we go" << std::endl;
-
     ev_run(loop, 0);
-
-    std::cerr << "died!" << std::endl;
 }
 
 } // end of NDTS::NTestingProcessor namespace
