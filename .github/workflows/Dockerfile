@@ -118,6 +118,18 @@ RUN git clone -b v3.17.3 --recurse-submodules https://github.com/protocolbuffers
 
 # end of protobuf download
 
+# begin of catch2 download
+
+RUN git clone https://github.com/catchorg/Catch2.git && \
+    cd Catch2 && \
+    mkdir build && \
+    cd build && \
+    cmake -DCMAKE_BUILD_TYPE=Release .. && \
+    cmake --build . -- -j $(nproc) && \
+    make install
+
+# end of catch2 download
+
 RUN apt-get install -y \
     libsnappy-dev \
     libpqxx-dev
