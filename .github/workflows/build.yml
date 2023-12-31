@@ -1,0 +1,21 @@
+name: CMake Build
+
+on:
+  pull_request:
+    branches: '*'
+
+jobs:
+  build:
+    runs-on: self-hosted
+    container:
+        image: pashandor789/dts_ci_env
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Build project
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DDTS_TEST=on
+          cmake --build . -- -j $(nproc) 

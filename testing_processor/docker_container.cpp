@@ -1,5 +1,7 @@
 #include "docker_container.h"
 
+#include "utils/execv_args.h"
+
 #include <fcntl.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -8,77 +10,76 @@ namespace fs = std::filesystem;
 
 namespace NDTS::NTestingProcessor {
 
-class TExecVArgs {
-public:
-    TExecVArgs(std::string pathName, std::vector<std::string> args)
-        : pathName_(std::move(pathName)) 
-        , args_(std::move(args))
-    {
-        argV_.reserve(args_.size() + 1);
+TExecVArgs GetExecCommandArgs(
+    const std::string& containerId,
+    std::vector<std::string> scriptArgs,
+    const std::optional<fs::path>& workingDir
+) {
+    std::vector<std::string> dockerCommand = {"/usr/bin/docker", "exec", "-i"};
 
-        for (auto& arg: args_) {
-            arg.push_back('\0'); //  data is not null-terminated before C++20
-            argV_.push_back(arg.data());
-        }
-
-        argV_.push_back(nullptr);
+    if (workingDir.has_value()) {
+        dockerCommand.push_back("-w");
+        dockerCommand.push_back(workingDir.value());
     }
 
-    const char* GetPathName() {
-        return pathName_.c_str();
-    }
+    dockerCommand.push_back(containerId);
 
-    char* const* GetArgV() {
-        return const_cast<char* const*>(argV_.data());
-    }
-
-private:
-    std::string pathName_;
-    std::vector<std::string> args_;
-private:
-    std::vector<char*> argV_;
-};
-
-TExecVArgs GetExecCommandArgs(const std::string& containerId, std::vector<std::string>&& scriptArgs) {
-    std::vector<std::string> dockerCommand = {"/usr/bin/docker", "exec", "-i", containerId};
     scriptArgs.insert(scriptArgs.begin(), dockerCommand.begin(), dockerCommand.end());
 
     return {"/usr/bin/docker", std::move(scriptArgs)};
 }
 
+TDockerContainer::TDockerContainer(const TDockerContainerConfig& config) 
+    : image_(config.image_name())
+    , cpuCount_(config.cpu_count())
+    , memoryLimit_(config.memory_limit())
+    , memorySwapLimit_(config.memory_swap_limit())
+    , pidLimit_(config.pid_limit())
+{}
+
 void TDockerContainer::Run() {
     std::string command = "/usr/bin/docker run -itd";
 
     command
+        .append(" --cpus ")
+        .append(std::to_string(cpuCount_))
+        .append(" --memory ")
+        .append(memoryLimit_)
+        .append(" --memory-swap ")
+        .append(memorySwapLimit_)
+        .append(" --pids-limit ")
+        .append(std::to_string(pidLimit_))
         .append(" ")
         .append(image_);
 
     FILE* dockerOut = popen(command.c_str(), "r");
 
+    std::string containerId;
     for (auto ch = fgetc(dockerOut); ch != EOF && ch != '\n'; ch = fgetc(dockerOut)) {
-        containerId_.push_back(ch);
+        containerId.push_back(ch);
     }
+
+    containerId_ = std::move(containerId);
 
     fclose(dockerOut);
 }
 
-void TDockerContainer::Exec(
+int TDockerContainer::Exec(
     std::vector<std::string> scriptArgs, 
-    const std::optional<fs::path>& stdIn,
-    const std::optional<fs::path>& stdOut
+    TDockerExecOptions options
 ) {
-    auto command = GetExecCommandArgs(containerId_, std::move(scriptArgs));
+    auto command = GetExecCommandArgs(containerId_, std::move(scriptArgs), options.workingDir);
 
     pid_t pid = fork();
 
     if (pid == 0) {
-        if (stdIn.has_value()) {
-            int fd = open(stdIn.value().c_str(), 0, O_RDONLY);
+        if (options.stdIn.has_value()) {
+            int fd = open(options.stdIn.value().c_str(), O_RDONLY);
             dup2(fd, STDIN_FILENO);
         }
 
-        if (stdOut.has_value()) {
-            int fd = open(stdOut.value().c_str(), 0, O_WRONLY);
+        if (options.stdOut.has_value()) {
+            int fd = open(options.stdOut.value().c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
             dup2(fd, STDOUT_FILENO);
         }
 
@@ -88,15 +89,40 @@ void TDockerContainer::Exec(
         exit(1);
     }
 
-    waitpid(pid, nullptr, 0); 
+    int stat = 0;
+    waitpid(pid, &stat, 0);
+    int exitCode = !WIFEXITED(stat) || WEXITSTATUS(stat);
+    return exitCode; 
 }
 
-void TDockerContainer::Stop() {
-    std::string command = "/usr/bin/docker stop";
+int TDockerContainer::ExecBash(
+    std::vector<std::string> scriptArgs, 
+    TDockerExecOptions options
+) {
+    scriptArgs.insert(scriptArgs.begin(), "/usr/bin/bash");
+    return Exec(std::move(scriptArgs), std::move(options));
+}
+
+void TDockerContainer::Kill() {
+    std::string command = "/usr/bin/docker stop -s SIGKILL";
 
     command
         .append(" ")
         .append(containerId_);
+
+    std::system(command.c_str());
+}
+
+void TDockerContainer::MoveFileInside(const fs::path& outsidePath, const fs::path& containerPath) {
+    std::string command = "/usr/bin/docker cp";
+
+    command
+        .append(" ")
+        .append(outsidePath)
+        .append(" ")
+        .append(containerId_)
+        .append(":")
+        .append(containerPath);
 
     std::system(command.c_str());
 }
@@ -111,8 +137,23 @@ void TDockerContainer::Remove() {
     std::system(command.c_str());  
 }
 
+void TDockerContainer::CreateFile(const fs::path& path, std::string content) {
+    std::string echoCommand;
+
+    echoCommand
+        .append("/usr/bin/echo")
+        .append(" ")
+        .append("'")
+        .append(content)
+        .append("'")
+        .append(" > ")
+        .append(path);
+
+    Exec({"sh", "-c", std::move(echoCommand)});
+}
+
 TDockerContainer::~TDockerContainer() {
-    Stop();
+    Kill();
     Remove();
 }
 

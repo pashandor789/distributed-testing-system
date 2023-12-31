@@ -4,8 +4,8 @@
 
 namespace NDTS::NTabasco {
 
-static const std::string INPUT_TEST_SUFFIX = "test";
-static const std::string OUTPUT_TEST_SUFFIX = "answer";
+static const std::string INPUT_TEST_SUFFIX = "input";
+static const std::string OUTPUT_TEST_SUFFIX = "output";
 
 static const char TEST_NUM_SEPARATOR = '_';
 
@@ -32,13 +32,13 @@ bool TLoadTestsHandler::Parse(const crow::request& req, crow::response& res) {
     std::vector<std::string> outputTests(testCount);
 
     std::vector<bool> initializedInputTests(testCount, false);
-    std::vector<bool> initialziedOutputTests(testCount, false);
+    std::vector<bool> initializedOutputTests(testCount, false);
 
     std::string taskId = "";
 
     for (auto& part: msg.parts) {
         auto contentDisposition = part.get_header_object("Content-Disposition").params;
-    
+
         if (contentDisposition["name"] == "taskId") {
             taskId = std::move(part.body);
             continue;
@@ -52,7 +52,7 @@ bool TLoadTestsHandler::Parse(const crow::request& req, crow::response& res) {
         std::string testSuffix = "";
 
         std::stringstream stream(contentDisposition["filename"]);
-        
+
         stream >> testNum;
         stream.ignore(1, TEST_NUM_SEPARATOR);
         stream >> testSuffix;
@@ -65,7 +65,7 @@ bool TLoadTestsHandler::Parse(const crow::request& req, crow::response& res) {
         }
 
         if (testSuffix == OUTPUT_TEST_SUFFIX) {
-            initialziedOutputTests[testNum - 1] = true;
+            initializedOutputTests[testNum - 1] = true;
             tests = &outputTests;
         }
 
@@ -87,7 +87,7 @@ bool TLoadTestsHandler::Parse(const crow::request& req, crow::response& res) {
     }
 
     auto invalidInputTests = GetInvalidTests(initializedInputTests);
-    auto invalidOutputTests = GetInvalidTests(initialziedOutputTests);
+    auto invalidOutputTests = GetInvalidTests(initializedOutputTests);
 
     if (!(invalidInputTests.empty() && invalidOutputTests.empty())) {
         res.code = 400;

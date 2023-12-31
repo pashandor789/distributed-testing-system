@@ -14,11 +14,14 @@ class TBuildDataBase {
 public:
     TBuildDataBase(const TBuildDataBaseConfig& config);
 
-    void UploadInitScript(std::string scriptName, std::string content);
+    /* return's id of inserted */
+    uint64_t UploadInitScript(std::string scriptName, std::string content);
 
-    void UploadExecuteScript(std::string scriptName, std::string content);
+    /* return's id of inserted */
+    uint64_t UploadExecuteScript(std::string scriptName, std::string content);
 
-    void CreateBuild(std::string buildName, uint64_t executeScriptId, uint64_t initScriptId);
+    /* return's id of inserted */
+    uint64_t CreateBuild(std::string buildName, uint64_t executeScriptId, uint64_t initScriptId);
 
     TScripts GetScripts(uint64_t buildId);
 
