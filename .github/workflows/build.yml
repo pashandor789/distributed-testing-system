@@ -21,6 +21,6 @@ jobs:
           cmake --build . -- -j $(nproc) 
       - name: Launch services
         run: |
-          cat .github/shared-libs.txt | -I {} cp {} shared-libs
+          cat .github/workflows/shared-libs.txt | -I {} cp {} shared-libs
           docker-compose build
           docker-compose start
