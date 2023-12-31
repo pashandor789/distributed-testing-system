@@ -14,12 +14,12 @@ services:
             POSTGRES_PASSWORD: 1488
             POSTGRES_DB: postgres
         ports:
-          - "5433:5432"
+            - "5433:5432"
     storage:
         image: mongo
         container_name: storage
         ports:
-          - "27018:27017"
+            - "27018:27017"
     http_tabasco:
         build:
             context: ./
@@ -42,3 +42,14 @@ services:
                 condition: service_healthy
         ports:
             - "9091:9090"
+    brocker:
+        image: rabbitmq:management
+        ports:
+            - "5673:5672"
+    testing_processor:
+        build:
+            context: ./
+            dockerfile: ./testing_processor/Dockerfile
+        depends_on:
+            brocker:
+                condition: service_started
