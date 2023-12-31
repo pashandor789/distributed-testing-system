@@ -134,6 +134,8 @@ RUN apt-get install -y \
     libsnappy-dev \
     libpqxx-dev \
     docker \
-    docker-compose
+    docker-compose \
+    libmongocrypt-dev
+
 
 WORKDIR /
