@@ -22,6 +22,7 @@ TEST_CASE("[TStorageClient] Correctness.") {
 
     REQUIRE(success);
     REQUIRE(data == "testContent");
+    REQUIRE(false);
 }
 
 TEST_CASE("[TStorageClient] Last write wins.") {

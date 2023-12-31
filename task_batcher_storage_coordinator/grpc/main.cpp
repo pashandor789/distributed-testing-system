@@ -18,6 +18,10 @@ int main(int argc, char** argv) {
         .required()
         .help("specify config file");
 
+    parser
+        .add_argument("-p", "--server-port")
+        .help("server port")
+        .scan<'i', uint16_t>();
 
     parser.parse_args(argc, argv);
 
@@ -31,7 +35,11 @@ int main(int argc, char** argv) {
     if (!input.is_open() ||!google::protobuf::TextFormat::Parse(&stream, &config)) {
         throw std::runtime_error("can't parse config");
     }
-    
+
+    if (std::optional<uint16_t> serverPort = parser.present<uint16_t>("--server-port")) {
+        config.set_server_port(*serverPort);
+    }
+
     std::string ipAddr;
 
     ipAddr

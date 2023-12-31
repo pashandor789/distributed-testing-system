@@ -4,5 +4,7 @@ build/
 tmp/
 .idea/
 test/proto/
+task_batcher_storage_coordinator/test/proto/
 __pycache__/
+shared-libs/
 scratch
