@@ -19,3 +19,7 @@ jobs:
           cd build
           cmake .. -DDTS_TEST=on
           cmake --build . -- -j $(nproc) 
+      - name: Launch services
+        run: |
+          docker-compose build
+          docker-compose start

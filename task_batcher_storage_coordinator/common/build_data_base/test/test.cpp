@@ -8,7 +8,7 @@ TBuildDataBaseConfig GetConfig() {
     TBuildDataBaseConfig config;
 
     config.set_dbname("postgres");
-    config.set_hostaddr("127.0.0.1");
+    config.set_host("localhost");
     config.set_port(5432);
 
     config.set_user("postgres");
