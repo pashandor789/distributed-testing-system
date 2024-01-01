@@ -12,8 +12,8 @@ import requests
 
 import pytest
 
-HTTP_TABASCO_URL = 'http://localhost:8080'
-GRPC_TABASCO_URL = 'localhost:9090'
+HTTP_TABASCO_URL = 'http://localhost:8081'
+GRPC_TABASCO_URL = 'localhost:9091'
 
 
 def post_request(url, data=None, files=None, json=None):
