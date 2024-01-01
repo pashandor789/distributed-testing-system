@@ -132,7 +132,11 @@ RUN apt-get install -y \
     libpqxx-dev \
     docker \
     docker-compose \
-    libmongocrypt-dev
+    libmongocrypt-dev \
+    python3-pip
 
+RUN pip install \
+    grpcio-tools \
+    pytest
 
 WORKDIR /
