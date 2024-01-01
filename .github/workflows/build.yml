@@ -23,5 +23,5 @@ jobs:
         run: |
           cat .github/workflows/shared-libs.txt | xargs -I {} cp {} shared-libs
           docker build -f task_batcher_storage_coordinator/http/Dockerfile -t kek .
-          docker run kek ls /usr/local/lib
+          docker run kek ls -l /usr/local/lib
  
