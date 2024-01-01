@@ -153,8 +153,10 @@ void TDockerContainer::CreateFile(const fs::path& path, std::string content) {
 }
 
 TDockerContainer::~TDockerContainer() {
-    Kill();
-    Remove();
+    if (!containerId_.empty()) {
+        Kill();
+        Remove();
+    }
 }
 
 } // end of NDTS::NTestingProcessor namespace
