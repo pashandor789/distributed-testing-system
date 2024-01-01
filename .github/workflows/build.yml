@@ -22,7 +22,7 @@ jobs:
       - name: Launch services
         run: |
           cat .github/workflows/shared-libs.txt | xargs -I {} cp {} shared-libs
-          docker-compose up --build -d
+          docker-compose up --build
       - name: Tabasco test
         run: |
           cd task_batcher_storage_coordinator/test
