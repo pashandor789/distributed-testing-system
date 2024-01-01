@@ -9,7 +9,7 @@ ENV LD_LIBRARY_PATH="/usr/local/lib"
 RUN mkdir "/testing_processor"
 RUN mkdir "/configs"
 
-COPY ./shared-libs /usr/local/lib
+COPY ./shared-libs/* /usr/local/lib
 COPY ./build/testing_processor/testing_processor /testing_processor
 COPY ./configs /configs
 

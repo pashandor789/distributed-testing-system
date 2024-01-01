@@ -6,7 +6,7 @@ ENV LD_LIBRARY_PATH="/usr/local/lib"
 RUN mkdir "/grpc_tabasco"
 RUN mkdir "/configs"
 
-COPY ./shared-libs /usr/local/lib
+COPY ./shared-libs/* /usr/local/lib
 COPY ./build/task_batcher_storage_coordinator/grpc/grpc_tabasco /grpc_tabasco
 COPY ./configs /configs
 
