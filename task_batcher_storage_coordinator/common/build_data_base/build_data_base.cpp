@@ -23,30 +23,42 @@ TBuildDataBase::TBuildDataBase(const TBuildDataBaseConfig& config)
     }
 }
 
-uint64_t TBuildDataBase::UploadInitScript(std::string scriptName, std::string content) {
-    pqxx::nontransaction nonTx(connection_);
-    auto result =
-    nonTx.exec_params("INSERT INTO init_scripts (name, content) VALUES ($1, $2) RETURNING ID", scriptName, content);
-    return result[0][0].as<uint64_t>();
+bool TBuildDataBase::UploadInitScript(std::string scriptName, std::string content) {
+    try {
+        pqxx::nontransaction nonTx(connection_);
+        auto result =
+        nonTx.exec_params("INSERT INTO init_scripts (name, content) VALUES ($1, $2) RETURNING ID", scriptName, content);
+        return true;
+    } catch (const std::exception& e) {
+        return false;
+    }
 }
 
-uint64_t TBuildDataBase::UploadExecuteScript(std::string scriptName, std::string content) {
-    pqxx::nontransaction nonTx(connection_);
-    auto result =
-    nonTx.exec_params("INSERT INTO execute_scripts (name, content) VALUES ($1, $2) RETURNING ID", scriptName, content);
-    return result[0][0].as<uint64_t>();
+bool TBuildDataBase::UploadExecuteScript(std::string scriptName, std::string content) {
+    try {
+        pqxx::nontransaction nonTx(connection_);
+        auto result =
+        nonTx.exec_params("INSERT INTO execute_scripts (name, content) VALUES ($1, $2) RETURNING ID", scriptName, content);
+        return true;
+    } catch (const std::exception& e) {
+        return false;
+    }
 }
 
-uint64_t TBuildDataBase::CreateBuild(std::string buildName, uint64_t executeScriptId, uint64_t initScriptId) {
-    pqxx::nontransaction nonTx(connection_);
-    auto result =
-    nonTx.exec_params(
-        " INSERT INTO builds "
-        " (name, init_script_id, execute_script_id) "
-        " VALUES ($1, $2, $3) "
-        " RETURNING ID ", buildName, initScriptId, executeScriptId
-    );
-    return result[0][0].as<uint64_t>();
+bool TBuildDataBase::CreateBuild(std::string buildName, uint64_t executeScriptId, uint64_t initScriptId) {
+    try {
+        pqxx::nontransaction nonTx(connection_);
+        auto result =
+            nonTx.exec_params(
+            " INSERT INTO builds "
+                " (name, init_script_id, execute_script_id) "
+                " VALUES ($1, $2, $3) ", buildName, initScriptId, executeScriptId
+            );
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        return false;
+    }
 }
 
 TScripts TBuildDataBase::GetScripts(uint64_t buildId) {

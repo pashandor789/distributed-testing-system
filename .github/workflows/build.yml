@@ -24,3 +24,7 @@ jobs:
           cat .github/workflows/shared-libs.txt | xargs -I {} cp {} shared-libs
           docker-compose build
           docker-compose start
+      - name: Tabasco test
+        run: |
+          cd task_batcher_storage_coordinator/test
+          make test
