@@ -9,7 +9,7 @@ std::string GetAuthenticationString(const TBuildDataBaseConfig& config) {
         .append("dbname = ").append(config.dbname()).append(" ")
         .append("user = ").append(config.user()).append(" ")
         .append("password = ").append(config.password()).append(" ")
-        .append("hostaddr = ").append(config.hostaddr()).append(" ")
+        .append("host = ").append(config.host()).append(" ")
         .append("port = ").append(std::to_string(config.port())).append(" ");
 
     return authenticationString;

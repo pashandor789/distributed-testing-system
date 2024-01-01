@@ -46,6 +46,8 @@ void TBrockerClient::Run() {
 
     std::cerr << "Started instance of TBrockerClient with TTestingProcessor" << std::endl;
     ev_run(loop, 0);
+
+    throw std::runtime_error("Connection error detected!");
 }
 
 } // end of NDTS::NTestingProcessor namespace

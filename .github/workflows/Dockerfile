@@ -132,6 +132,10 @@ RUN git clone https://github.com/catchorg/Catch2.git && \
 
 RUN apt-get install -y \
     libsnappy-dev \
-    libpqxx-dev
+    libpqxx-dev \
+    docker \
+    docker-compose \
+    libmongocrypt-dev
+
 
 WORKDIR /

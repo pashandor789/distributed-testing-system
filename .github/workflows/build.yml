@@ -19,3 +19,8 @@ jobs:
           cd build
           cmake .. -DDTS_TEST=on
           cmake --build . -- -j $(nproc) 
+      - name: Launch services
+        run: |
+          cat .github/workflows/shared-libs.txt | xargs -I {} cp {} shared-libs
+          docker-compose build
+          docker-compose start

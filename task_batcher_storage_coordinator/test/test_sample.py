@@ -11,8 +11,8 @@ import grpc
 import proto.tabasco_grpc_pb2
 import proto.tabasco_grpc_pb2_grpc
 
-HTTP_TABASCO_URL = 'http://localhost:2228'
-GRPC_TABASCO_URL = 'http://localhost:2229'
+HTTP_TABASCO_URL = 'http://localhost:8080'
+GRPC_TABASCO_URL = 'http://localhost:9090'
 
 
 def post_request(url, data=None, files=None):
