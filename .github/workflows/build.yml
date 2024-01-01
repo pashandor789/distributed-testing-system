@@ -8,7 +8,7 @@ jobs:
   build:
     runs-on: self-hosted
     container:
-        image: pashandor789/dts_ci_env
+      image: pashandor789/dts_ci_env
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -23,6 +23,8 @@ jobs:
         run: |
           mkdir shared-libs
           cat .github/workflows/shared-libs.txt | xargs -I {} cp {} shared-libs
-          docker build -f task_batcher_storage_coordinator/http/Dockerfile -t kek .
-          docker run kek ls -l /usr/local/lib
- 
+          docker-compose up --build -d
+      - name: Tabasco test
+        run: |
+          cd task_batcher_storage_coordinator/test
+          make test
