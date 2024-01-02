@@ -1,25 +1,22 @@
 #file: noinspection YAMLSchemaValidation
 services:
-    build-data-base:
+    build_data_base:
         healthcheck:
-            test: ["CMD-SHELL", "pg_isready", "-d", "db_prod"]
+            test: ["CMD-SHELL", "pg_isready", "-d", "$${POSTGRES_DB}", "-U", "$${POSTGRES_USER}"]
             interval: 5s
             timeout: 60s
             retries: 5
             start_period: 80s
-        image: postgres
-        container_name: build-data-base
-        environment:
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: 1488
-            POSTGRES_DB: postgres
+        build:
+            context: ./
+            dockerfile: ./sql/Dockerfile
         ports:
-            - "5433:5432"
+            - 5433:5432
     storage:
         image: mongo
         container_name: storage
         ports:
-            - "27018:27017"
+            - 27018:27017
     http_tabasco:
         build:
             context: ./
@@ -27,10 +24,10 @@ services:
         depends_on:
             storage:
                 condition: service_started
-            build-data-base:
+            build_data_base:
                 condition: service_healthy
         ports:
-            - "8081:8080"
+            - 8081:8080
     grpc_tabasco:
         build:
             context: ./
@@ -38,18 +35,25 @@ services:
         depends_on:
             storage:
                 condition: service_started
-            build-data-base:
+            build_data_base:
                 condition: service_healthy
         ports:
-            - "9091:9090"
+            - 9091:9090
     brocker:
         image: rabbitmq:management
-        ports:
-            - "5673:5672"
     testing_processor:
         build:
             context: ./
             dockerfile: ./testing_processor/Dockerfile
         depends_on:
             brocker:
+                condition: service_started
+    tabasco_test:
+        build:
+            context: ./
+            dockerfile: ./task_batcher_storage_coordinator/test/Dockerfile
+        depends_on:
+            grpc_tabasco:
+                condition: service_started
+            http_tabasco:
                 condition: service_started

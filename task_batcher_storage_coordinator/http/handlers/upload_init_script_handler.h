@@ -3,20 +3,21 @@
 #include <crow.h>
 #include <nlohmann/json.hpp>
 
-#include "server.h"
+#include <string>
+
+#include "../server.h"
 
 namespace NDTS::NTabasco {
 
-class TLoadTestsHandler {
+class TUploadInitScriptHandler {
 public:
     void Handle(const crow::request& req, crow::response& res, const TContext& ctx);
 
     bool Parse(const crow::request& req, crow::response& res);
 
 private:
-    std::string taskId_;
-    std::vector<std::string> inputTests_;
-    std::vector<std::string> outputTests_;
+    std::string scriptName_;
+    std::string content_;
 };
 
 } // end of NDTS::TTabasco namespace

@@ -1,4 +1,4 @@
-#include "load_tests_handler.h"
+#include "upload_tests_handler.h"
 
 #include <vector>
 
@@ -23,7 +23,7 @@ std::string GetInvalidTests(const std::vector<bool>& initializedTests) {
     return invalidTests;
 }
 
-bool TLoadTestsHandler::Parse(const crow::request& req, crow::response& res) {
+bool TUploadTestsHandler::Parse(const crow::request& req, crow::response& res) {
     crow::multipart::message msg(req);
 
     size_t testCount = msg.parts.size() / 2;
@@ -177,7 +177,7 @@ std::vector<std::vector<size_t>> SplitIntoBatches(
     return batches;
 }
 
-void TLoadTestsHandler::Handle(const crow::request& req, crow::response& res, const TContext& ctx) {
+void TUploadTestsHandler::Handle(const crow::request& req, crow::response& res, const TContext& ctx) {
     if (!Parse(req, res)) {
         return;
     }

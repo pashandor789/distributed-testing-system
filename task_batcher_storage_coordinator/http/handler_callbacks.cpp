@@ -1,6 +1,7 @@
 #include "handler_callbacks.h"
 
-#include "load_tests_handler.h"
+#include "handlers/upload_tests_handler.h"
+#include "handlers/upload_init_script_handler.h"
 
 #include <nlohmann/json.hpp>
 
@@ -9,7 +10,7 @@ namespace NDTS::NTabasco {
 THandlerCallback GetLoadTestsCallback(TTabascoHTTPServer* server) {
     THandlerCallback callback = 
     [server](const crow::request& req) -> crow::response {
-        TLoadTestsHandler handler;
+        TUploadTestsHandler handler;
         crow::response resp;
         handler.Handle(req, resp, TContext{.server = server});
         return resp;
@@ -21,18 +22,9 @@ THandlerCallback GetLoadTestsCallback(TTabascoHTTPServer* server) {
 THandlerCallback GetUploadInitScriptCallback(TTabascoHTTPServer* server) {
     THandlerCallback callback =
     [server](const crow::request& req) -> crow::response {
+        TUploadInitScriptHandler handler;
         crow::response resp;
-
-        nlohmann::json data = nlohmann::json::parse(req.body, nullptr, false);
-
-        if (data.is_discarded() || !data.contains("scriptName") || !data.contains("content")) {
-            resp.code = 400;
-            resp.body = "bad json";
-            return resp;
-        }
-
-        server->builds_.UploadInitScript(std::move(data["scriptName"]), std::move(data["content"]));
-
+        handler.Handle(req, resp, TContext{.server = server});
         return resp;
     };
 
@@ -52,7 +44,17 @@ THandlerCallback GetUploadExecuteScriptCallback(TTabascoHTTPServer* server) {
             return resp;
         }
 
-        server->builds_.UploadExecuteScript(std::move(data["scriptName"]), std::move(data["content"]));
+        bool success =
+            server->builds_.UploadExecuteScript(
+                    std::move(data["scriptName"]),
+                    std::move(data["content"])
+            );
+
+        if (!success) {
+            resp.code = 500;
+            resp.body = "build db error!";
+            return resp;
+        }
 
         return resp;
     };
@@ -76,7 +78,18 @@ THandlerCallback GetCreateBuildCallback(TTabascoHTTPServer* server) {
             return resp;
         }
 
-        server->builds_.CreateBuild(data["buildName"], data["executeScriptId"], data["initScriptId"]);
+        bool success =
+            server->builds_.CreateBuild(
+                    data["buildName"],
+                    data["executeScriptId"],
+                    data["initScriptId"]
+            );
+
+        if (!success) {
+            resp.code = 500;
+            resp.body = "build db error!";
+            return resp;
+        }
 
         return resp;
     };

@@ -1,8 +1,3 @@
-import random
-import requests
-
-import pytest
-
 import sys
 
 sys.path.append('proto')
@@ -11,25 +6,34 @@ import grpc
 import proto.tabasco_grpc_pb2
 import proto.tabasco_grpc_pb2_grpc
 
-HTTP_TABASCO_URL = 'http://localhost:8080'
-GRPC_TABASCO_URL = 'http://localhost:9090'
+import copy
+import random
+import requests
+
+import pytest
+
+HTTP_TABASCO_URL = 'http://http_tabasco:8080'
+GRPC_TABASCO_URL = 'grpc_tabasco:9090'
 
 
-def post_request(url, data=None, files=None):
+def post_request(url, data=None, files=None, json=None):
     response = None
 
     try:
         response = requests.post(
             url=url,
             data=data,
-            files=files
+            files=files,
+            json=json,
+            timeout=20
         )
     except requests.exceptions.ConnectionError:
         pass
 
-    assert response, 'Tabasco connection failed! More likely it has not been launched yet.'
+    assert response != None, 'Tabasco connection failed! More likely it has not been launched yet.'
 
     return response
+
 
 @pytest.fixture(scope="module")
 def uploaded_test():
@@ -42,16 +46,18 @@ def uploaded_test():
 
     return tests
 
+
 init_script = 'g++ $1 -o executable'
 execute_script = './executable'
 
-class TestHTTPTabasco:
-    def test_upload_tests_handler(self):
-        files = uploaded_test()
-        files['taskId'] = 0
-        response = post_request(f'{HTTP_TABASCO_URL}/uploadTests', files)
 
-        assert response.status_code == 200, f'uploadTest failed! {response}'
+class TestHTTPTabasco:
+    def test_upload_tests_handler(self, uploaded_test):
+        files = copy.deepcopy(uploaded_test)
+        files['taskId'] = 0
+        response = post_request(f'{HTTP_TABASCO_URL}/uploadTests', files=files)
+
+        assert response.status_code == 200, f'uploadTest failed: {response.content.decode()}'
 
     def test_upload_scripts(self):
         data = {
@@ -59,9 +65,9 @@ class TestHTTPTabasco:
             'content': init_script
         }
 
-        response = post_request(f'{HTTP_TABASCO_URL}/uploadInitScript', data=data)
+        response = post_request(f'{HTTP_TABASCO_URL}/uploadInitScript', json=data)
 
-        assert response.status_code == 200, f'uploadInitScript failed! {response}'
+        assert response.status_code == 200, f'uploadInitScript failed: {response.content.decode()}'
 
     def test_upload_execute_script(self):
         data = {
@@ -69,47 +75,45 @@ class TestHTTPTabasco:
             'content': execute_script
         }
 
-        response = post_request(f'{HTTP_TABASCO_URL}/uploadExecuteScript', data=data)
+        response = post_request(f'{HTTP_TABASCO_URL}/uploadExecuteScript', json=data)
 
-        assert response.status_code == 200, f'uploadExecuteScript failed! {response}'
+        assert response.status_code == 200, f'uploadExecuteScript failed: {response.content.decode()}'
 
     def test_create_build(self):
         data = {
             'buildName': 'testBuild',
-            'executeScriptId': 0,
-            'initScriptId': 0
+            'executeScriptId': 1,
+            'initScriptId': 1
         }
 
-        response = post_request(f'{HTTP_TABASCO_URL}/createBuild', data=data)
+        response = post_request(f'{HTTP_TABASCO_URL}/createBuild', json=data)
 
-        assert response.status_code == 200, f'createBuild failed! {response}'
+        assert response.status_code == 200, f'createBuild failed: {response.content.decode()}'
+
 
 def get_grpc_tabasco_stub():
     channel = grpc.insecure_channel(GRPC_TABASCO_URL)
     stub = proto.tabasco_grpc_pb2_grpc.TTabascoGRPCStub(channel)
     return stub
 
+
 class TestGRPCTabasco:
-    def test_get_script_and_get_batch(self):
+    def test_get_script_and_get_batch(self, uploaded_test):
         stub = get_grpc_tabasco_stub()
 
-        request = proto.tabasco_grpc_pb2.TGetScriptsRequest(task_id=0, build_id=0)
+        request = proto.tabasco_grpc_pb2.TGetScriptsRequest(task_id=0, build_id=1)
         response = stub.GetScripts(request)
-
-        assert response.status_code == grpc.StatusCode.OK
 
         assert response.init_script == init_script
         assert response.execute_script == execute_script
         assert response.batch_count > 0
 
-        tests = uploaded_test()
+        tests = uploaded_test
         test_index = 1
 
         for batch_id in range(response.batch_count):
             request = proto.tabasco_grpc_pb2.TGetBatchRequest(task_id=0, batch_id=batch_id)
             response = stub.GetBatch(request)
-
-            assert response.status_code == grpc.StatusCode.OK
 
             assert len(response.input) > 0
             assert len(response.input) == len(response.output)

@@ -8,11 +8,14 @@ jobs:
   build:
     runs-on: self-hosted
     container:
-        image: pashandor789/dts_ci_env
+      image: pashandor789/dts_ci_env
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
+      - name: Build project
+        run: |
+          ls -l
+          pwd
       - name: Build project
         run: |
           mkdir build
@@ -21,6 +24,16 @@ jobs:
           cmake --build . -- -j $(nproc) 
       - name: Launch services
         run: |
+          mkdir shared-libs
           cat .github/workflows/shared-libs.txt | xargs -I {} cp {} shared-libs
           docker-compose build
-          docker-compose start
+          docker-compose up -d build_data_base storage http_tabasco grpc_tabasco
+      - name: Tabasco test build
+        run: |
+          docker-compose run tabasco_test
+      - name: Show services logs
+        if: always()
+        run: docker-compose logs
+      - name: Stop services
+        if: always()
+        run: docker-compose down

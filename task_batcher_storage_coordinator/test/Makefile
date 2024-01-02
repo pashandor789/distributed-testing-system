@@ -5,6 +5,3 @@ generate_proto:
  		--pyi_out=proto			 								\
  		--grpc_python_out=proto  								\
  		../grpc/proto/tabasco_grpc.proto
-
-test: generate_proto
-	pytest .

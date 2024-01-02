@@ -98,10 +98,7 @@ RUN git clone --recurse-submodules https://github.com/CrowCpp/Crow.git && \
 
 RUN git clone https://github.com/CopernicaMarketingSoftware/AMQP-CPP.git && \
     cd AMQP-CPP && \
-    mkdir build && \
-    cd build && \
-    cmake .. -DAMQP-CPP_LINUX_TCP=ON -DCMAKE_BUILD_TYPE=Release .. && \
-    cmake --build . -- -j $(nproc) && \
+    make -j $(nproc) && \
     make install
 
 # end of ampqcpp download
@@ -135,7 +132,11 @@ RUN apt-get install -y \
     libpqxx-dev \
     docker \
     docker-compose \
-    libmongocrypt-dev
+    libmongocrypt-dev \
+    python3-pip
 
+RUN pip install \
+    grpcio-tools \
+    pytest
 
 WORKDIR /
