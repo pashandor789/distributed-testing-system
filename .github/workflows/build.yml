@@ -9,10 +9,14 @@ jobs:
     runs-on: self-hosted
     container:
       image: pashandor789/dts_ci_env
+    services:
+      http_tabasco:
+        image: distributed-testing-system_http_tabasco
+        ports:
+          - 9090:9090
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
       - name: Build project
         run: |
           mkdir build
