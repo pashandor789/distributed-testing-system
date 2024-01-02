@@ -29,7 +29,7 @@ services:
             storage:
                 condition: service_started
             build-data-base:
-                condition: service_healthy"
+                condition: service_healthy
     grpc_tabasco:
         network_mode: host
         build:
@@ -39,7 +39,7 @@ services:
             storage:
                 condition: service_started
             build-data-base:
-                condition: service_healthy"
+                condition: service_healthy
     brocker:
         network_mode: host
         image: rabbitmq:management
