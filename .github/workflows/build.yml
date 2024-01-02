@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu
     container:
       image: pashandor789/dts_ci_env
     steps:
