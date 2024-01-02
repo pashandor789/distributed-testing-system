@@ -5,7 +5,7 @@ RUN mkdir "test"
 
 WORKDIR "test"
 
-COPY . .
+COPY ./task_batcher_storage_coordinator/test .
 RUN pip install -r requirements.txt
 
 ENTRYPOINT pytest -vs --log-level=INFO

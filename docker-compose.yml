@@ -23,6 +23,7 @@ services:
         ports:
             - "27018:27017"
     http_tabasco:
+        network_mode: host
         build:
             context: ./
             dockerfile: ./task_batcher_storage_coordinator/http/Dockerfile
@@ -31,8 +32,8 @@ services:
                 condition: service_started
             build-data-base:
                 condition: service_healthy
-        ports:
-            - "8081:8080"
+#        ports:
+#            - "8081:8080"
     grpc_tabasco:
         build:
             context: ./
@@ -55,12 +56,12 @@ services:
         depends_on:
             brocker:
                 condition: service_started
-    tabasco_test:
-        build:
-            context: ./task_batcher_storage_coordinator/test
-            dockerfile: ./Dockerfile
-        depends_on:
-            http_tabasco:
-                condition: service_started
-            grpc_tabasco:
-                condition: service_started
+#    tabasco_test:
+#        build:
+#            context: ./task_batcher_storage_coordinator/test
+#            dockerfile: ./Dockerfile
+#        depends_on:
+#            http_tabasco:
+#                condition: service_started
+#            grpc_tabasco:
+#                condition: service_started
