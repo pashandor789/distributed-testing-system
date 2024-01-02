@@ -58,7 +58,7 @@ services:
     tabasco_test:
         build:
             context: ./task_batcher_storage_coordinator/test
-            dockerfile: ./task_batcher_storage_coordinator/test/Dockerfile
+            dockerfile: ./Dockerfile
         depends_on:
             http_tabasco:
                 condition: service_started
