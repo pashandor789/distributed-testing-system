@@ -22,8 +22,7 @@ jobs:
         run: |
           mkdir shared-libs
           cat .github/workflows/shared-libs.txt | xargs -I {} cp {} shared-libs
-          docker-compose up --build
+          docker-compose up --build -d build_data_base storage http_tabasco grpc_tabasco
       - name: Tabasco test build
         run: |
-          docker build -f ./task_batcher_storage_coordinator/test/Dockerfile -t tabasco_test .
-          docker run --network=host tabasco_test
+          docker-compose run tabasco_test
