@@ -9,7 +9,7 @@ services:
             start_period: 80s
         build:
             context: ./
-            dockerfile: ./sql/Dockerfile
+            dockerfile: ./build_data_base/Dockerfile
         ports:
             - 5433:5432
     storage:
