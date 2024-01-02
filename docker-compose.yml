@@ -33,32 +33,32 @@ services:
                 condition: service_healthy
         ports:
             - 8080:8080
-#    grpc_tabasco:
-#        build:
-#            context: ./
-#            dockerfile: ./task_batcher_storage_coordinator/grpc/Dockerfile
-#        depends_on:
-#            storage:
-#                condition: service_started
-#            build_data_base:
-#                condition: service_healthy
-#        ports:
-#            - 9090:9090
-#    brocker:
-#        image: rabbitmq:management
-#    testing_processor:
-#        build:
-#            context: ./
-#            dockerfile: ./testing_processor/Dockerfile
-#        depends_on:
-#            brocker:
-#                condition: service_started
-#    tabasco_test:
-#        build:
-#            context: ./
-#            dockerfile: ./task_batcher_storage_coordinator/test/Dockerfile
-#        depends_on:
-#            grpc_tabasco:
-#                condition: service_started
-#            http_tabasco:
-#                condition: service_started
+    grpc_tabasco:
+        build:
+            context: ./
+            dockerfile: ./task_batcher_storage_coordinator/grpc/Dockerfile
+        depends_on:
+            storage:
+                condition: service_started
+            build_data_base:
+                condition: service_healthy
+        ports:
+            - 9090:9090
+    brocker:
+        image: rabbitmq:management
+    testing_processor:
+        build:
+            context: ./
+            dockerfile: ./testing_processor/Dockerfile
+        depends_on:
+            brocker:
+                condition: service_started
+    tabasco_test:
+        build:
+            context: ./
+            dockerfile: ./task_batcher_storage_coordinator/test/Dockerfile
+        depends_on:
+            grpc_tabasco:
+                condition: service_started
+            http_tabasco:
+                condition: service_started
