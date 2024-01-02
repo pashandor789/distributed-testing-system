@@ -14,7 +14,7 @@ services:
             POSTGRES_USER: "postgres"
             POSTGRES_PASSWORD: "1488"
         volumes:
-            - ./sql:/docker-entrypoint-initdb.d
+            - ./sql/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
         ports:
             - 5433:5432
     storage:
