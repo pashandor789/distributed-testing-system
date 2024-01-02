@@ -26,4 +26,4 @@ jobs:
       - name: Tabasco test build
         run: |
           docker build -f ./task_batcher_storage_coordinator/test/Dockerfile -t tabasco_test .
-          docker run --network=host -it tabasco_test
+          docker run --network=host tabasco_test
