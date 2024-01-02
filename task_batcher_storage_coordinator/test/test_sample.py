@@ -24,7 +24,8 @@ def post_request(url, data=None, files=None, json=None):
             url=url,
             data=data,
             files=files,
-            json=json
+            json=json,
+            timeout=20
         )
     except requests.exceptions.ConnectionError:
         pass
