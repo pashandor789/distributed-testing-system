@@ -26,6 +26,7 @@ jobs:
         run: |
           mkdir shared-libs
           cat .github/workflows/shared-libs.txt | xargs -I {} cp {} shared-libs
+          docker-compose rm
           docker-compose build
           docker-compose up -d build_data_base storage
       - name: Tabasco test build
