@@ -1,6 +1,6 @@
 #file: noinspection YAMLSchemaValidation
 services:
-    build-data-base:
+    build_data_base:
         network_mode: host
         healthcheck:
             test: ["CMD-SHELL", "pg_isready", "-d", "$${POSTGRES_DB}", "-U", "$${POSTGRES_USER}"]
@@ -9,7 +9,7 @@ services:
             retries: 5
             start_period: 80s
         image: postgres
-        container_name: build-data-base
+        container_name: build_data_base
         environment:
             POSTGRES_DB: "postgres"
             POSTGRES_USER: "postgres"
@@ -28,7 +28,7 @@ services:
         depends_on:
             storage:
                 condition: service_started
-            build-data-base:
+            build_data_base:
                 condition: service_healthy
     grpc_tabasco:
         network_mode: host
@@ -38,7 +38,7 @@ services:
         depends_on:
             storage:
                 condition: service_started
-            build-data-base:
+            build_data_base:
                 condition: service_healthy
     brocker:
         network_mode: host
