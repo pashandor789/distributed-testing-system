@@ -23,7 +23,7 @@ jobs:
           mkdir shared-libs
           cat .github/workflows/shared-libs.txt | xargs -I {} cp {} shared-libs
           docker-compose up --build -d
-      - name: Tabasco test
+      - name: Tabasco test build
         run: |
-          cd task_batcher_storage_coordinator/test
-          pytest .
+          docker build -f ./task_batcher_storage_coordinator/test/Dockerfile -t tabasco_test .
+          docker run -it tabasco_test
