@@ -1,7 +1,6 @@
 #file: noinspection YAMLSchemaValidation
 services:
     build_data_base:
-        network_mode: host
         healthcheck:
             test: ["CMD-SHELL", "pg_isready", "-d", "$${POSTGRES_DB}", "-U", "$${POSTGRES_USER}"]
             interval: 5s
@@ -16,12 +15,14 @@ services:
             POSTGRES_PASSWORD: "1488"
         volumes:
             - ./.github/workflows/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
+        ports:
+            - 5432:5432
     storage:
-        network_mode: host
         image: mongo
         container_name: storage
+        ports:
+            - 27017:27017
     http_tabasco:
-        network_mode: host
         build:
             context: ./
             dockerfile: ./task_batcher_storage_coordinator/http/Dockerfile
@@ -30,8 +31,9 @@ services:
                 condition: service_started
             build_data_base:
                 condition: service_healthy
+        ports:
+            - 8080:8080
     grpc_tabasco:
-        network_mode: host
         build:
             context: ./
             dockerfile: ./task_batcher_storage_coordinator/grpc/Dockerfile
@@ -40,11 +42,11 @@ services:
                 condition: service_started
             build_data_base:
                 condition: service_healthy
+        ports:
+            - 9090:9090
     brocker:
-        network_mode: host
         image: rabbitmq:management
     testing_processor:
-        network_mode: host
         build:
             context: ./
             dockerfile: ./testing_processor/Dockerfile

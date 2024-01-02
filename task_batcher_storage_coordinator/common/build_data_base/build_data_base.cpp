@@ -26,8 +26,7 @@ TBuildDataBase::TBuildDataBase(const TBuildDataBaseConfig& config)
 bool TBuildDataBase::UploadInitScript(std::string scriptName, std::string content) {
     try {
         pqxx::nontransaction nonTx(connection_);
-        auto result =
-        nonTx.exec_params("INSERT INTO init_scripts (name, content) VALUES ($1, $2) RETURNING ID", scriptName, content);
+        nonTx.exec_params("INSERT INTO init_scripts (name, content) VALUES ($1, $2)", scriptName, content);
         return true;
     } catch (const std::exception& e) {
         return false;
@@ -37,8 +36,7 @@ bool TBuildDataBase::UploadInitScript(std::string scriptName, std::string conten
 bool TBuildDataBase::UploadExecuteScript(std::string scriptName, std::string content) {
     try {
         pqxx::nontransaction nonTx(connection_);
-        auto result =
-        nonTx.exec_params("INSERT INTO execute_scripts (name, content) VALUES ($1, $2) RETURNING ID", scriptName, content);
+        nonTx.exec_params("INSERT INTO execute_scripts (name, content) VALUES ($1, $2)", scriptName, content);
         return true;
     } catch (const std::exception& e) {
         return false;
@@ -48,12 +46,11 @@ bool TBuildDataBase::UploadExecuteScript(std::string scriptName, std::string con
 bool TBuildDataBase::CreateBuild(std::string buildName, uint64_t executeScriptId, uint64_t initScriptId) {
     try {
         pqxx::nontransaction nonTx(connection_);
-        auto result =
-            nonTx.exec_params(
-            " INSERT INTO builds "
-                " (name, init_script_id, execute_script_id) "
-                " VALUES ($1, $2, $3) ", buildName, initScriptId, executeScriptId
-            );
+        nonTx.exec_params(
+        " INSERT INTO builds "
+            " (name, init_script_id, execute_script_id) "
+            " VALUES ($1, $2, $3) ", buildName, initScriptId, executeScriptId
+        );
         return true;
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
