@@ -27,6 +27,9 @@ jobs:
       - name: Tabasco test build
         run: |
           docker-compose run tabasco_test
+      - name: Show services logs
+        if: always()
+        run: docker compose logs
       - name: Stop services
         if: always()
         run: docker-compose down
