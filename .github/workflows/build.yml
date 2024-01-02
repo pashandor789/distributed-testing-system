@@ -7,6 +7,10 @@ on:
 jobs:
   build:
     runs-on: self-hosted
+    services:
+      docker:
+        image: docker:19.03.12
+        options: --privileged
     container:
       image: pashandor789/dts_ci_env
     steps:
