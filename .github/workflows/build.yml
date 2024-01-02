@@ -26,4 +26,4 @@ jobs:
       - name: Tabasco test
         run: |
           cd task_batcher_storage_coordinator/test
-          make test
+          pytest .

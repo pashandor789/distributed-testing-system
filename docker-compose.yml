@@ -23,6 +23,7 @@ services:
         ports:
             - "27018:27017"
     http_tabasco:
+        network_mode: host
         build:
             context: ./
             dockerfile: ./task_batcher_storage_coordinator/http/Dockerfile
