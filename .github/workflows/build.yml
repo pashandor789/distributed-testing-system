@@ -29,4 +29,4 @@ jobs:
           docker-compose run tabasco_test
       - name: Stop services
         if: always()
-        run: docker compose down
+        run: docker-compose down
