@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu
+    runs-on: ubuntu-latest
     container:
       image: pashandor789/dts_ci_env
     steps:
