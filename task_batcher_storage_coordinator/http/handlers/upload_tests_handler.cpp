@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
 namespace NDTS::NTabasco {
 
 static const std::string INPUT_TEST_SUFFIX = "input";
