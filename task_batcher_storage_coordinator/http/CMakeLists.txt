@@ -8,6 +8,7 @@ add_executable(
     http_tabasco
     server.cpp
     main.cpp
+    parse_json.cpp
     handler_callbacks.cpp
     handlers/create_build_handler.cpp
     handlers/upload_init_script_handler.cpp

@@ -2,15 +2,25 @@
 
 #include <variant>
 
+template <typename TValue>
+class TUnexpected {
+public:
+    TUnexpected(TValue value)
+        : value_(std::move(value))
+    {}
+
+    TValue value_;
+};
+
 template <typename TValue, typename TError>
 class TExpected {
 public:
     TExpected(TValue val)
-        : variant_(val)
+        : variant_(std::move(val))
     {}
 
-    TExpected(TError err)
-        : variant_(err)
+    TExpected(TUnexpected<TError> unexpected)
+        : variant_(std::move(unexpected.value_))
     {}
 
     TValue Value() {
