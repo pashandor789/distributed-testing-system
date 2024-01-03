@@ -1,4 +1,4 @@
-#include "upload_init_script_handler.h"
+#include "upload_execute_script_handler.h"
 #include "utils/utils.h"
 
 #include "parse_json.h"
@@ -7,7 +7,7 @@
 
 namespace NDTS::NTabasco {
 
-bool TUploadInitScriptHandler::Parse(const crow::request& req, crow::response& res) {
+bool TUploadExecuteScriptHandler::Parse(const crow::request& req, crow::response& res) {
     auto parseResult = ParseJSON(req.body, {"scriptName", "content"});
 
     if (parseResult.HasError()) {
@@ -24,15 +24,15 @@ bool TUploadInitScriptHandler::Parse(const crow::request& req, crow::response& r
     return true;
 }
 
-void TUploadInitScriptHandler::Handle(const crow::request& req, crow::response& res, const TContext& ctx) {
+void TUploadExecuteScriptHandler::Handle(const crow::request& req, crow::response& res, const TContext& ctx) {
     if (!Parse(req, res)) {
         return;
     }
 
     bool success =
-        ctx.server->builds_.UploadInitScript(
-        std::move(scriptName_),
-        std::move(content_)
+        ctx.server->builds_.UploadExecuteScript(
+            std::move(scriptName_),
+            std::move(content_)
         );
 
     if (!success) {

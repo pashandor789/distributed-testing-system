@@ -11,7 +11,7 @@
 #include <grpcpp/server_builder.h>
 
 int main(int argc, char** argv) {
-    argparse::ArgumentParser parser("http tabasco server");
+    argparse::ArgumentParser parser("grpc tabasco server");
 
     parser
         .add_argument("-c", "--config-path")

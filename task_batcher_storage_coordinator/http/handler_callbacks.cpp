@@ -1,7 +1,9 @@
 #include "handler_callbacks.h"
 
-#include "handlers/upload_tests_handler.h"
+#include "handlers/create_build_handler.h"
+#include "handlers/upload_execute_script_handler.h"
 #include "handlers/upload_init_script_handler.h"
+#include "handlers/upload_tests_handler.h"
 
 #include <nlohmann/json.hpp>
 
@@ -34,28 +36,9 @@ THandlerCallback GetUploadInitScriptCallback(TTabascoHTTPServer* server) {
 THandlerCallback GetUploadExecuteScriptCallback(TTabascoHTTPServer* server) {
     THandlerCallback callback =
     [server](const crow::request& req) -> crow::response {
+        TUploadExecuteScriptHandler handler;
         crow::response resp;
-
-        nlohmann::json data = nlohmann::json::parse(req.body, nullptr, false);
-
-        if (data.is_discarded() || !data.contains("scriptName") || !data.contains("content")) {
-            resp.code = 400;
-            resp.body = "bad json";
-            return resp;
-        }
-
-        bool success =
-            server->builds_.UploadExecuteScript(
-                    std::move(data["scriptName"]),
-                    std::move(data["content"])
-            );
-
-        if (!success) {
-            resp.code = 500;
-            resp.body = "build db error!";
-            return resp;
-        }
-
+        handler.Handle(req, resp, TContext{.server = server});
         return resp;
     };
 
@@ -65,32 +48,9 @@ THandlerCallback GetUploadExecuteScriptCallback(TTabascoHTTPServer* server) {
 THandlerCallback GetCreateBuildCallback(TTabascoHTTPServer* server) {
     THandlerCallback callback =
     [server](const crow::request& req) -> crow::response {
+        TCreateBuildHandler handler;
         crow::response resp;
-
-        nlohmann::json data = nlohmann::json::parse(req.body, nullptr, false);
-
-        bool isDataInvalid = 
-            !data.contains("executeScriptId") || !data.contains("initScriptId") || !data.contains("buildName");
-
-        if (data.is_discarded() || isDataInvalid) {
-            resp.code = 400;
-            resp.body = "bad json";
-            return resp;
-        }
-
-        bool success =
-            server->builds_.CreateBuild(
-                    data["buildName"],
-                    data["executeScriptId"],
-                    data["initScriptId"]
-            );
-
-        if (!success) {
-            resp.code = 500;
-            resp.body = "build db error!";
-            return resp;
-        }
-
+        handler.Handle(req, resp, TContext{.server = server});
         return resp;
     };
 
