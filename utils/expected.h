@@ -2,14 +2,14 @@
 
 #include <variant>
 
-template <typename TValue>
+template <typename TError>
 class TUnexpected {
 public:
-    TUnexpected(TValue value)
+    TUnexpected(TError value)
         : value_(std::move(value))
     {}
 
-    TValue value_;
+    TError value_;
 };
 
 template <typename TValue, typename TError>
