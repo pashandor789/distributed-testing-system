@@ -8,8 +8,11 @@ add_executable(
     http_tabasco
     server.cpp
     main.cpp
+    parse_json.cpp
     handler_callbacks.cpp
+    handlers/create_build_handler.cpp
     handlers/upload_init_script_handler.cpp
+    handlers/upload_execute_script_handler.cpp
     handlers/upload_tests_handler.cpp
 )
 
@@ -17,6 +20,7 @@ set(DTS_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../..)
 set(TABASCO_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
 set(COMMON_DIR ${TABASCO_ROOT_DIR}/common)
 add_subdirectory(${COMMON_DIR} common)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${TABASCO_ROOT_DIR})
 include_directories(${DTS_ROOT_DIR})
 
