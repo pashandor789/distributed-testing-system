@@ -16,4 +16,8 @@ THandlerCallback GetUploadExecuteScriptCallback(TTabascoHTTPServer* server);
 
 THandlerCallback GetCreateBuildCallback(TTabascoHTTPServer* server);
 
+THandlerCallback GetInitScriptsCallback(TTabascoHTTPServer* server);
+
+THandlerCallback GetExecuteScriptsCallback(TTabascoHTTPServer* server);
+
 } // end of NDTS::TTabasco namespace

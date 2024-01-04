@@ -74,4 +74,46 @@ TScripts TBuildDataBase::GetScripts(uint64_t buildId) {
     };
 }
 
+TInitScripts TBuildDataBase::GetInitScripts() {
+    pqxx::nontransaction nonTx(connection_);
+
+    std::vector<TInitScript> initScripts;
+
+    pqxx::result deserializedScripts = nonTx.exec("SELECT id, name, content FROM init_scripts");
+    initScripts.reserve(deserializedScripts.size());
+
+    for (const auto& script: deserializedScripts) {
+        initScripts.push_back(
+            TInitScript{
+                .id = script[0].as<uint64_t>(),
+                .name = script[1].as<std::string>(),
+                .content = script[2].as<std::string>()
+            }
+        );
+    }
+
+    return TInitScripts{.scripts = std::move(initScripts)};
+}
+
+TExecuteScripts TBuildDataBase::GetExecuteScripts() {
+    pqxx::nontransaction nonTx(connection_);
+
+    std::vector<TExecuteScript> executeScripts;
+
+    pqxx::result deserializedScripts = nonTx.exec("SELECT id, name, content FROM execute_scripts");
+    executeScripts.reserve(deserializedScripts.size());
+
+    for (const auto& script: deserializedScripts) {
+        executeScripts.push_back(
+            TExecuteScript{
+                .id = script[0].as<uint64_t>(),
+                .name = script[1].as<std::string>(),
+                .content = script[2].as<std::string>()
+            }
+        );
+    }
+
+    return TExecuteScripts{.scripts = std::move(executeScripts)};
+}
+
 } // end of NDTS::TTabasco namespace

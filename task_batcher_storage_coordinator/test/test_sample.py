@@ -1,3 +1,4 @@
+import json
 import string
 import sys
 
@@ -17,11 +18,19 @@ HTTP_TABASCO_URL = 'http://http_tabasco:8080'
 GRPC_TABASCO_URL = 'grpc_tabasco:9090'
 
 
-def post_request(url, data=None, files=None, json=None):
+def post_request(url, **kwargs):
+    return noexcept_request(url, requests.post, **kwargs)
+
+
+def get_request(url, **kwargs):
+    return noexcept_request(url, requests.get, **kwargs)
+
+
+def noexcept_request(url, method, data=None, files=None, json=None):
     response = None
 
     try:
-        response = requests.post(
+        response = method(
             url=url,
             data=data,
             files=files,
@@ -62,6 +71,8 @@ def uploaded_test_big_string():
 
 init_script = 'g++ $1 -o executable'
 execute_script = './executable'
+init_script_id = 1
+execute_script_id = 1
 
 
 class TestHTTPTabasco:
@@ -98,11 +109,33 @@ class TestHTTPTabasco:
 
         assert response.status_code == 200, f'uploadExecuteScript failed: {response.content.decode()}'
 
+    def test_init_scripts_handler(self):
+        response = get_request(f'{HTTP_TABASCO_URL}/initScripts')
+        scripts = json.loads(response.content.decode())["scripts"]
+
+        filtered_scripts = list(filter(lambda x: x['content'] == init_script, scripts))
+
+        assert len(filtered_scripts) > 0, f'init script with content {init_script} was not found in {scripts}'
+
+        global init_script_id
+        init_script_id = filtered_scripts[0]["id"]
+
+    def test_execute_scripts_handler(self):
+        response = get_request(f'{HTTP_TABASCO_URL}/executeScripts')
+        scripts = json.loads(response.content.decode())["scripts"]
+
+        filtered_scripts = list(filter(lambda x: x['content'] == execute_script, scripts))
+
+        assert len(filtered_scripts) > 0, f'execute script with content {execute_script} was not found in {scripts}'
+
+        global execute_script_id
+        execute_script_id = filtered_scripts[0]["id"]
+
     def test_create_build(self):
         data = {
             'buildName': 'testBuild',
-            'executeScriptId': 1,
-            'initScriptId': 1
+            'executeScriptId': execute_script_id,
+            'initScriptId': init_script_id
         }
 
         response = post_request(f'{HTTP_TABASCO_URL}/createBuild', json=data)
