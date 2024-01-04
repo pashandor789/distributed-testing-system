@@ -20,4 +20,6 @@ THandlerCallback GetInitScriptsCallback(TTabascoHTTPServer* server);
 
 THandlerCallback GetExecuteScriptsCallback(TTabascoHTTPServer* server);
 
+THandlerCallback GetBuildsCallback(TTabascoHTTPServer* server);
+
 } // end of NDTS::TTabasco namespace

@@ -73,6 +73,7 @@ init_script = 'g++ $1 -o executable'
 execute_script = './executable'
 init_script_id = 1
 execute_script_id = 1
+build_id = 1
 
 
 class TestHTTPTabasco:
@@ -111,7 +112,10 @@ class TestHTTPTabasco:
 
     def test_init_scripts_handler(self):
         response = get_request(f'{HTTP_TABASCO_URL}/initScripts')
-        scripts = json.loads(response.content.decode())["scripts"]
+
+        assert response.status_code == 200, f'initScripts failed: {response.content.decode()}'
+
+        scripts = json.loads(response.content.decode())["items"]
 
         filtered_scripts = list(filter(lambda x: x['content'] == init_script, scripts))
 
@@ -122,7 +126,10 @@ class TestHTTPTabasco:
 
     def test_execute_scripts_handler(self):
         response = get_request(f'{HTTP_TABASCO_URL}/executeScripts')
-        scripts = json.loads(response.content.decode())["scripts"]
+
+        assert response.status_code == 200, f'executeScripts failed: {response.content.decode()}'
+
+        scripts = json.loads(response.content.decode())["items"]
 
         filtered_scripts = list(filter(lambda x: x['content'] == execute_script, scripts))
 
@@ -142,6 +149,27 @@ class TestHTTPTabasco:
 
         assert response.status_code == 200, f'createBuild failed: {response.content.decode()}'
 
+    def test_builds_handler(self):
+        response = get_request(f'{HTTP_TABASCO_URL}/builds')
+        builds = json.loads(response.content.decode())["items"]
+
+        assert response.status_code == 200, f'builds failed: {response.content.decode()}'
+
+        filter_func = lambda x: (
+            x['executeScript']['id'] == execute_script_id and
+            x['initScript']['id'] == init_script_id
+        )
+
+        filtered_builds = list(filter(filter_func, builds))
+
+        assert len(filtered_builds) > 0, f'build was not found in {filtered_builds}'
+
+        assert filtered_builds[0]['executeScript']['content'] == execute_script
+        assert filtered_builds[0]['initScript']['content'] == init_script
+
+        global build_id
+        build_id = filtered_builds[0]["id"]
+
 
 def get_grpc_tabasco_stub():
     channel = grpc.insecure_channel(
@@ -160,7 +188,7 @@ class TestGRPCTabasco:
         stub = get_grpc_tabasco_stub()
 
         for (task_id, tests) in enumerate([uploaded_test_a_plus_b, uploaded_test_big_string]):
-            request = proto.tabasco_grpc_pb2.TGetScriptsRequest(task_id=task_id, build_id=1)
+            request = proto.tabasco_grpc_pb2.TGetScriptsRequest(task_id=task_id, build_id=build_id)
             response = stub.GetScripts(request)
 
             assert response.init_script == init_script

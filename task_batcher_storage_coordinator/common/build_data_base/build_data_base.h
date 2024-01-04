@@ -23,6 +23,8 @@ public:
 
     TInitScripts GetInitScripts();
 
+    TBuilds GetBuilds();
+
 private:
     pqxx::connection connection_;
 };

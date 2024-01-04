@@ -1,5 +1,6 @@
 #include "handler_callbacks.h"
 
+#include "handlers/builds_handler.h"
 #include "handlers/execute_scripts_handler.h"
 #include "handlers/init_scripts_handler.h"
 #include "handlers/create_build_handler.h"
@@ -73,6 +74,18 @@ THandlerCallback GetExecuteScriptsCallback(TTabascoHTTPServer* server) {
     THandlerCallback callback =
     [server](const crow::request& req) -> crow::response {
         TExecuteScriptsHandler handler;
+        crow::response resp;
+        handler.Handle(req, resp, TContext{.server = server});
+        return resp;
+    };
+
+    return callback;
+}
+
+THandlerCallback GetBuildsCallback(TTabascoHTTPServer* server) {
+    THandlerCallback callback =
+    [server](const crow::request& req) -> crow::response {
+        TBuildsHandler handler;
         crow::response resp;
         handler.Handle(req, resp, TContext{.server = server});
         return resp;

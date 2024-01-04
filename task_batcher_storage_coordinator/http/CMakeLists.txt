@@ -10,6 +10,7 @@ add_executable(
     main.cpp
     parse_json.cpp
     handler_callbacks.cpp
+    handlers/builds_handler.cpp
     handlers/execute_scripts_handler.cpp
     handlers/init_scripts_handler.cpp
     handlers/create_build_handler.cpp

@@ -1,6 +1,6 @@
 # TAsk BAtcher Storage COordinator. (TABASCO)
 
-Service, which stores scripts for building/executing submissions and bathes of tests.
+Service, which stores items for building/executing submissions and bathes of tests.
 
 Nowaday, we have gRPC variant for inner usage, and http variant server for requests from client.
 

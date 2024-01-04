@@ -2,6 +2,19 @@
 
 namespace NDTS::NTabasco {
 
+template <typename TItems>
+std::vector<nlohmann::json> MoveToJSONVector(TItems items) {
+    std::vector<nlohmann::json> movedData;
+
+    movedData.reserve(items.size());
+
+    for (auto& item: items) {
+        movedData.push_back(item.MoveToJSON());
+    }
+
+    return movedData;
+}
+
 nlohmann::json TInitScript::MoveToJSON() {
     nlohmann::json data;
 
@@ -14,16 +27,7 @@ nlohmann::json TInitScript::MoveToJSON() {
 
 nlohmann::json TInitScripts::MoveToJSON() {
     nlohmann::json data;
-
-    std::vector<nlohmann::json> movedScripts;
-    movedScripts.reserve(scripts.size());
-
-    for (auto& el: scripts) {
-        movedScripts.push_back(el.MoveToJSON());
-    }
-
-    data["scripts"] = std::move(movedScripts);
-
+    data["items"] = MoveToJSONVector(std::move(items));
     return data;
 }
 
@@ -39,18 +43,26 @@ nlohmann::json TExecuteScript::MoveToJSON() {
 
 nlohmann::json TExecuteScripts::MoveToJSON() {
     nlohmann::json data;
+    data["items"] = MoveToJSONVector(std::move(items));
+    return data;
+}
 
-    std::vector<nlohmann::json> movedScripts;
-    movedScripts.reserve(scripts.size());
+nlohmann::json TBuild::MoveToJSON() {
+    nlohmann::json data;
 
-    for (auto& el: scripts) {
-        movedScripts.push_back(el.MoveToJSON());
-    }
+    data["id"] = id;
+    data["name"] = std::move(name);
 
-    data["scripts"] = std::move(movedScripts);
+    data["initScript"] = initScript.MoveToJSON();
+    data["executeScript"] = executeScript.MoveToJSON();
 
     return data;
 }
 
+nlohmann::json TBuilds::MoveToJSON() {
+    nlohmann::json data;
+    data["items"] = MoveToJSONVector(std::move(items));
+    return data;
+}
 
 } // end of NDTS::TTabasco namespace

@@ -21,7 +21,7 @@ struct TInitScript {
 };
 
 struct TInitScripts {
-    std::vector<TInitScript> scripts;
+    std::vector<TInitScript> items;
 
     nlohmann::json MoveToJSON();
 };
@@ -35,7 +35,23 @@ struct TExecuteScript {
 };
 
 struct TExecuteScripts {
-    std::vector<TExecuteScript> scripts;
+    std::vector<TExecuteScript> items;
+
+    nlohmann::json MoveToJSON();
+};
+
+struct TBuild {
+    uint64_t id;
+    std::string name;
+
+    TInitScript initScript;
+    TExecuteScript executeScript;
+
+    nlohmann::json MoveToJSON();
+};
+
+struct TBuilds {
+    std::vector<TBuild> items;
 
     nlohmann::json MoveToJSON();
 };
