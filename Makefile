@@ -4,10 +4,8 @@ prepare:
 	mkdir -p build
 
 build: prepare
-	cd build
 	cmake -S . -B ./build -DDTS_TEST=ON
 	cmake --build ./build -- -j $(nproc)
-	cd ..
 
 build_services: build
 	docker-compose build
