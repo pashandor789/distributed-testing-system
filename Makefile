@@ -9,11 +9,11 @@ build_services: build
 	docker-compose build
 
 launch_services:
-	docker-compose up -d build_data_base storage http_tabasco grpc_tabasco
+	docker-compose up -d build_data_base storage brocker http_tabasco grpc_tabasco testing_processor
 
 test:
 	docker-compose run tabasco_test
 
-launch_build_services: build_services launch_services
+build_launch_services: build_services launch_services
 
-launch_build_test_services: build_services launch_services test
+build_launch_test_services: build_services launch_services test

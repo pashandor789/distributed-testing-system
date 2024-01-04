@@ -3,10 +3,6 @@ services:
     build_data_base:
         healthcheck:
             test: ["CMD-SHELL", "pg_isready", "-d", "$${POSTGRES_DB}", "-U", "$${POSTGRES_USER}"]
-            interval: 5s
-            timeout: 60s
-            retries: 5
-            start_period: 80s
         build:
             context: ./
             dockerfile: task_batcher_storage_coordinator/common/build_data_base/Dockerfile
@@ -40,14 +36,20 @@ services:
         ports:
             - 9091:9090
     brocker:
+        healthcheck:
+            test: rabbitmq-diagnostics check_port_connectivity
         image: rabbitmq:management
+        ports:
+            - 5673:5672
+            - 15673:15672
+            - 25673:25672
     testing_processor:
         build:
             context: ./
             dockerfile: ./testing_processor/Dockerfile
         depends_on:
             brocker:
-                condition: service_started
+                condition: service_healthy
     tabasco_test:
         build:
             context: ./
