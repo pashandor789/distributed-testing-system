@@ -8,4 +8,4 @@ WORKDIR "test"
 COPY ./task_batcher_storage_coordinator/test .
 RUN pip install -r requirements.txt
 
-ENTRYPOINT pytest -vs --log-level=INFO
+ENTRYPOINT pytest -vs --log-level=INFO --durations=0

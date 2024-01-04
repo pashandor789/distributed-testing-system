@@ -3,12 +3,9 @@
 #include <pqxx/pqxx>
 #include "common/proto/build_data_base.pb.h"
 
-namespace NDTS::NTabasco {
+#include "data_repr.h"
 
-struct TScripts {
-    std::string initScript;
-    std::string executeScript;
-};
+namespace NDTS::NTabasco {
 
 class TBuildDataBase {
 public:
@@ -21,6 +18,10 @@ public:
     bool CreateBuild(std::string buildName, uint64_t executeScriptId, uint64_t initScriptId);
 
     TScripts GetScripts(uint64_t buildId);
+
+    TExecuteScripts GetExecuteScripts();
+
+    TInitScripts GetInitScripts();
 
 private:
     pqxx::connection connection_;

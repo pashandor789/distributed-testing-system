@@ -1,3 +1,5 @@
+import json
+import string
 import sys
 
 sys.path.append('proto')
@@ -16,11 +18,19 @@ HTTP_TABASCO_URL = 'http://http_tabasco:8080'
 GRPC_TABASCO_URL = 'grpc_tabasco:9090'
 
 
-def post_request(url, data=None, files=None, json=None):
+def post_request(url, **kwargs):
+    return noexcept_request(url, requests.post, **kwargs)
+
+
+def get_request(url, **kwargs):
+    return noexcept_request(url, requests.get, **kwargs)
+
+
+def noexcept_request(url, method, data=None, files=None, json=None):
     response = None
 
     try:
-        response = requests.post(
+        response = method(
             url=url,
             data=data,
             files=files,
@@ -30,13 +40,13 @@ def post_request(url, data=None, files=None, json=None):
     except requests.exceptions.ConnectionError:
         pass
 
-    assert response != None, 'Tabasco connection failed! More likely it has not been launched yet.'
+    assert response is not None, 'Tabasco connection failed! More likely it has not been launched yet.'
 
     return response
 
 
 @pytest.fixture(scope="module")
-def uploaded_test():
+def uploaded_test_a_plus_b():
     tests = {}
 
     for i in range(1, 30 + 1):
@@ -47,14 +57,34 @@ def uploaded_test():
     return tests
 
 
+@pytest.fixture(scope="module")
+def uploaded_test_big_string():
+    tests = {}
+
+    for i in range(1, 5 + 1):
+        big_string = ''.join([random.choice(string.ascii_letters) for _ in range(10_000_000)])
+        tests[f'{i}_input'] = big_string
+        tests[f'{i}_output'] = big_string
+
+    return tests
+
+
 init_script = 'g++ $1 -o executable'
 execute_script = './executable'
+init_script_id = 1
+execute_script_id = 1
 
 
 class TestHTTPTabasco:
-    def test_upload_tests_handler(self, uploaded_test):
-        files = copy.deepcopy(uploaded_test)
+    def test_upload_tests_handler(self, uploaded_test_a_plus_b, uploaded_test_big_string):
+        files = copy.deepcopy(uploaded_test_a_plus_b)
         files['taskId'] = 0
+        response = post_request(f'{HTTP_TABASCO_URL}/uploadTests', files=files)
+
+        assert response.status_code == 200, f'uploadTest failed: {response.content.decode()}'
+
+        files = copy.deepcopy(uploaded_test_big_string)
+        files['taskId'] = 1
         response = post_request(f'{HTTP_TABASCO_URL}/uploadTests', files=files)
 
         assert response.status_code == 200, f'uploadTest failed: {response.content.decode()}'
@@ -79,11 +109,33 @@ class TestHTTPTabasco:
 
         assert response.status_code == 200, f'uploadExecuteScript failed: {response.content.decode()}'
 
+    def test_init_scripts_handler(self):
+        response = get_request(f'{HTTP_TABASCO_URL}/initScripts')
+        scripts = json.loads(response.content.decode())["scripts"]
+
+        filtered_scripts = list(filter(lambda x: x['content'] == init_script, scripts))
+
+        assert len(filtered_scripts) > 0, f'init script with content {init_script} was not found in {scripts}'
+
+        global init_script_id
+        init_script_id = filtered_scripts[0]["id"]
+
+    def test_execute_scripts_handler(self):
+        response = get_request(f'{HTTP_TABASCO_URL}/executeScripts')
+        scripts = json.loads(response.content.decode())["scripts"]
+
+        filtered_scripts = list(filter(lambda x: x['content'] == execute_script, scripts))
+
+        assert len(filtered_scripts) > 0, f'execute script with content {execute_script} was not found in {scripts}'
+
+        global execute_script_id
+        execute_script_id = filtered_scripts[0]["id"]
+
     def test_create_build(self):
         data = {
             'buildName': 'testBuild',
-            'executeScriptId': 1,
-            'initScriptId': 1
+            'executeScriptId': execute_script_id,
+            'initScriptId': init_script_id
         }
 
         response = post_request(f'{HTTP_TABASCO_URL}/createBuild', json=data)
@@ -92,39 +144,45 @@ class TestHTTPTabasco:
 
 
 def get_grpc_tabasco_stub():
-    channel = grpc.insecure_channel(GRPC_TABASCO_URL)
+    channel = grpc.insecure_channel(
+        GRPC_TABASCO_URL,
+        options=[
+            ('grpc.max_send_message_length', 150_000_000),
+            ('grpc.max_receive_message_length', 150_000_000)
+        ]
+    )
     stub = proto.tabasco_grpc_pb2_grpc.TTabascoGRPCStub(channel)
     return stub
 
 
 class TestGRPCTabasco:
-    def test_get_script_and_get_batch(self, uploaded_test):
+    def test_get_script_and_get_batch(self, uploaded_test_a_plus_b, uploaded_test_big_string):
         stub = get_grpc_tabasco_stub()
 
-        request = proto.tabasco_grpc_pb2.TGetScriptsRequest(task_id=0, build_id=1)
-        response = stub.GetScripts(request)
+        for (task_id, tests) in enumerate([uploaded_test_a_plus_b, uploaded_test_big_string]):
+            request = proto.tabasco_grpc_pb2.TGetScriptsRequest(task_id=task_id, build_id=1)
+            response = stub.GetScripts(request)
 
-        assert response.init_script == init_script
-        assert response.execute_script == execute_script
-        assert response.batch_count > 0
+            assert response.init_script == init_script
+            assert response.execute_script == execute_script
+            assert response.batch_count > 0
 
-        tests = uploaded_test
-        test_index = 1
+            test_index = 1
 
-        for batch_id in range(response.batch_count):
-            request = proto.tabasco_grpc_pb2.TGetBatchRequest(task_id=0, batch_id=batch_id)
-            response = stub.GetBatch(request)
+            for batch_id in range(response.batch_count):
+                request = proto.tabasco_grpc_pb2.TGetBatchRequest(task_id=task_id, batch_id=batch_id)
+                response = stub.GetBatch(request)
 
-            assert len(response.input) > 0
-            assert len(response.input) == len(response.output)
+                assert len(response.input) > 0
+                assert len(response.input) == len(response.output)
 
-            for input_test, output_test in zip(response.input, response.output):
-                assert input_test == tests[f'{test_index}_input']
-                assert output_test == tests[f'{test_index}_output']
+                for input_test, output_test in zip(response.input, response.output):
+                    assert input_test == tests[f'{test_index}_input']
+                    assert output_test == tests[f'{test_index}_output']
 
-                tests.pop(f'{test_index}_input')
-                tests.pop(f'{test_index}_output')
+                    tests.pop(f'{test_index}_input')
+                    tests.pop(f'{test_index}_output')
 
-                test_index += 1
+                    test_index += 1
 
-        assert len(tests) == 0
+            assert len(tests) == 0

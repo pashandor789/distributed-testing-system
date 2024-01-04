@@ -5,6 +5,7 @@ include_guard(GLOBAL)
 add_library(
     build_data_base
     build_data_base.cpp
+    data_repr.cpp
 )
 
 set(COMMON_PROTO_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../proto)

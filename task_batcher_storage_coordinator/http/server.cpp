@@ -31,6 +31,14 @@ void TTabascoHTTPServer::InitHandlers() {
     CROW_ROUTE(app_, "/createBuild").methods("POST"_method) (
         GetCreateBuildCallback(this)
     );
+
+    CROW_ROUTE(app_, "/initScripts").methods("GET"_method) (
+        GetInitScriptsCallback(this)
+    );
+
+    CROW_ROUTE(app_, "/executeScripts").methods("GET"_method) (
+        GetExecuteScriptsCallback(this)
+    );
 }
 
 void TTabascoHTTPServer::Run() {

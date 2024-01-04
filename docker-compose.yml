@@ -9,7 +9,7 @@ services:
             start_period: 80s
         build:
             context: ./
-            dockerfile: ./build_data_base/Dockerfile
+            dockerfile: task_batcher_storage_coordinator/common/build_data_base/Dockerfile
         ports:
             - 5433:5432
     storage:
