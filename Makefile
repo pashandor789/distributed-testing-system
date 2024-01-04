@@ -1,7 +1,9 @@
 build:
 	mkdir -p builds
 	cd builds
+	cmake .. -DDTS_TEST=ON
 	cmake --build . -- -j $(nproc)
+	cd ..
 	mkdir -p shared-libs
 	cat .github/workflows/shared-libs.txt | xargs -I {} cp {} shared-libs
 
