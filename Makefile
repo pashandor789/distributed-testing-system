@@ -1,11 +1,13 @@
-build:
+prepare:
+	mkdir -p shared-libs
+	cat .github/workflows/shared-libs.txt | xargs -I {} cp {} shared-libs
 	mkdir -p build
+
+build: prepare
 	cd build
 	cmake -S . -B ./build -DDTS_TEST=ON
 	cmake --build ./build -- -j $(nproc)
 	cd ..
-	mkdir -p shared-libs
-	cat .github/workflows/shared-libs.txt | xargs -I {} cp {} shared-libs
 
 build_services: build
 	docker-compose build
