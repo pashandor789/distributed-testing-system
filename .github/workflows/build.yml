@@ -14,19 +14,13 @@ jobs:
         uses: actions/checkout@v2
       - name: Build project
         run: |
-          mkdir build
-          cd build
-          cmake .. -DDTS_TEST=on
-          cmake --build . -- -j $(nproc) 
+          make build
       - name: Launch services
         run: |
-          mkdir shared-libs
-          cat .github/workflows/shared-libs.txt | xargs -I {} cp {} shared-libs
-          docker-compose build
-          docker-compose up -d build_data_base storage http_tabasco grpc_tabasco
-      - name: Tabasco test build
+          make build_launch_services
+      - name: Tests run
         run: |
-          docker-compose run tabasco_test
+          make test
       - name: Show services logs
         if: always()
         run: docker-compose logs

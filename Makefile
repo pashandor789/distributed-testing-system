@@ -1,7 +1,9 @@
 build:
-	mkdir -p builds
-	cd builds
-	cmake --build . -- -j $(nproc)
+	mkdir -p build
+	cd build
+	cmake -S . -B ./build -DDTS_TEST=ON
+	cmake --build ./build -- -j $(nproc)
+	cd ..
 	mkdir -p shared-libs
 	cat .github/workflows/shared-libs.txt | xargs -I {} cp {} shared-libs
 
@@ -9,11 +11,11 @@ build_services: build
 	docker-compose build
 
 launch_services:
-	docker-compose up -d build_data_base storage http_tabasco grpc_tabasco
+	docker-compose up -d build_data_base storage brocker http_tabasco grpc_tabasco testing_processor
 
 test:
 	docker-compose run tabasco_test
 
-launch_build_services: build_services launch_services
+build_launch_services: build_services launch_services
 
-launch_build_test_services: build_services launch_services test
+build_launch_test_services: build_services launch_services test
