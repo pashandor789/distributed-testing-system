@@ -13,8 +13,14 @@ build_services: build
 launch_services:
 	docker-compose up -d build_data_base storage brocker http_tabasco grpc_tabasco testing_processor
 
-test:
+test_services:
 	docker-compose run tabasco_test
+
+test_unit: build
+	cd build && \
+	ctest  --output-on-failure .
+
+test: test_unit test_services
 
 build_launch_services: build_services launch_services
 
