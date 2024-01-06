@@ -1,8 +1,10 @@
 build/
 *build-debug/
 *build-release/
+downloads/
 tmp/
 .idea/
+.vscode/
 test/proto/
 task_batcher_storage_coordinator/test/proto/
 __pycache__/
