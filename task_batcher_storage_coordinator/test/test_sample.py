@@ -76,20 +76,15 @@ execute_script_id = 1
 build_id = 1
 
 
+def upload_tests(task_id, tests):
+    files = copy.deepcopy(tests)
+    files['taskId'] = task_id
+    response = post_request(f'{HTTP_TABASCO_URL}/uploadTests', files=files)
+
+    assert response.status_code == 200, f'uploadTest failed: {response.content.decode()}'
+
+
 class TestHTTPTabasco:
-    def test_upload_tests_handler(self, uploaded_test_a_plus_b, uploaded_test_big_string):
-        files = copy.deepcopy(uploaded_test_a_plus_b)
-        files['taskId'] = 0
-        response = post_request(f'{HTTP_TABASCO_URL}/uploadTests', files=files)
-
-        assert response.status_code == 200, f'uploadTest failed: {response.content.decode()}'
-
-        files = copy.deepcopy(uploaded_test_big_string)
-        files['taskId'] = 1
-        response = post_request(f'{HTTP_TABASCO_URL}/uploadTests', files=files)
-
-        assert response.status_code == 200, f'uploadTest failed: {response.content.decode()}'
-
     def test_upload_scripts(self):
         data = {
             'scriptName': 'testInit',
@@ -170,6 +165,12 @@ class TestHTTPTabasco:
         global build_id
         build_id = filtered_builds[0]["id"]
 
+    def test_upload_tests_handler_small_tests(self, uploaded_test_a_plus_b):
+        upload_tests(task_id=0, tests=uploaded_test_a_plus_b)
+
+    def test_upload_tests_handler_big_tests(self, uploaded_test_big_string):
+        upload_tests(task_id=1, tests=uploaded_test_big_string)
+
 
 def get_grpc_tabasco_stub():
     channel = grpc.insecure_channel(
@@ -183,34 +184,40 @@ def get_grpc_tabasco_stub():
     return stub
 
 
+def get_script_and_get_batch(task_id, expected_tests):
+    stub = get_grpc_tabasco_stub()
+
+    request = proto.tabasco_grpc_pb2.TGetScriptsRequest(task_id=task_id, build_id=build_id)
+    response = stub.GetScripts(request)
+
+    assert response.init_script == init_script
+    assert response.execute_script == execute_script
+    assert response.batch_count > 0
+
+    test_index = 1
+
+    for batch_id in range(response.batch_count):
+        request = proto.tabasco_grpc_pb2.TGetBatchRequest(task_id=task_id, batch_id=batch_id)
+        response = stub.GetBatch(request)
+
+        assert len(response.input) > 0
+        assert len(response.input) == len(response.output)
+
+        for input_test, output_test in zip(response.input, response.output):
+            assert input_test == expected_tests[f'{test_index}_input']
+            assert output_test == expected_tests[f'{test_index}_output']
+
+            expected_tests.pop(f'{test_index}_input')
+            expected_tests.pop(f'{test_index}_output')
+
+            test_index += 1
+
+    assert len(expected_tests) == 0
+
+
 class TestGRPCTabasco:
-    def test_get_script_and_get_batch(self, uploaded_test_a_plus_b, uploaded_test_big_string):
-        stub = get_grpc_tabasco_stub()
+    def test_get_script_and_get_batch_small_tests(self, uploaded_test_a_plus_b):
+        get_script_and_get_batch(0, uploaded_test_a_plus_b)
 
-        for (task_id, tests) in enumerate([uploaded_test_a_plus_b, uploaded_test_big_string]):
-            request = proto.tabasco_grpc_pb2.TGetScriptsRequest(task_id=task_id, build_id=build_id)
-            response = stub.GetScripts(request)
-
-            assert response.init_script == init_script
-            assert response.execute_script == execute_script
-            assert response.batch_count > 0
-
-            test_index = 1
-
-            for batch_id in range(response.batch_count):
-                request = proto.tabasco_grpc_pb2.TGetBatchRequest(task_id=task_id, batch_id=batch_id)
-                response = stub.GetBatch(request)
-
-                assert len(response.input) > 0
-                assert len(response.input) == len(response.output)
-
-                for input_test, output_test in zip(response.input, response.output):
-                    assert input_test == tests[f'{test_index}_input']
-                    assert output_test == tests[f'{test_index}_output']
-
-                    tests.pop(f'{test_index}_input')
-                    tests.pop(f'{test_index}_output')
-
-                    test_index += 1
-
-            assert len(tests) == 0
+    def test_get_script_and_get_batch_big_tests(self, uploaded_test_big_string):
+        get_script_and_get_batch(1, uploaded_test_big_string)
