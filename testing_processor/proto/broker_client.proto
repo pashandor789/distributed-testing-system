@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package NDTS.NTestingProcessor;
 
-message TBrockerClientConfig {
+message TBrokerClientConfig {
     string server_url = 1;
     string queue_name = 2;
 }
