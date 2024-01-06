@@ -1,12 +1,14 @@
 #include "tabasco_request_task.h"
 
+#include <utility>
+
 namespace NDTS::NTestingProcessor {
 
 TTabascoRequestTask::TTabascoRequestTask(std::shared_ptr<NTabasco::TTabascoGRPC::Stub> tabasco)
-    : tabasco_(tabasco)
+    : tabasco_(std::move(tabasco))
 {}
 
-TGetScriptsResponse TTabascoRequestTask::GetScripts(uint64_t taskId, uint64_t buildId) {
+TExpected<TGetScriptsResponse, TErrorResponse> TTabascoRequestTask::GetScripts(uint64_t taskId, uint64_t buildId) {
     NTabasco::TGetScriptsRequest request;
 
     request.set_task_id(taskId);
@@ -18,17 +20,17 @@ TGetScriptsResponse TTabascoRequestTask::GetScripts(uint64_t taskId, uint64_t bu
     grpc::Status status = tabasco_->GetScripts(&context, request, &response);
 
     if (!status.ok()) {
-        std::cerr << "tabasco grpc error: " << status.error_message() << std::endl;
+        return TUnexpected<TErrorResponse>({ .msg = status.error_message() });
     }
 
     return TGetScriptsResponse{
-        .initScript = std::move(response.init_script()),
-        .executeScript = std::move(response.execute_script()),
+        .initScript = std::move(*response.mutable_init_script()),
+        .executeScript = std::move(*response.mutable_execute_script()),
         .batchCount = response.batch_count()
     };
 }
 
-TGetBatchResponse TTabascoRequestTask::GetBatch(uint64_t taskId, uint64_t batchId) {
+TExpected<TGetBatchResponse, TErrorResponse> TTabascoRequestTask::GetBatch(uint64_t taskId, uint64_t batchId) {
     NTabasco::TGetBatchRequest request;
 
     request.set_task_id(taskId);
@@ -39,14 +41,18 @@ TGetBatchResponse TTabascoRequestTask::GetBatch(uint64_t taskId, uint64_t batchI
     NTabasco::TGetBatchResponse response;
     grpc::Status status = tabasco_->GetBatch(&context, request, &response);
 
+    if (!status.ok()) {
+        return TUnexpected<TErrorResponse>({ .msg = status.error_message() });
+    }
+
     std::vector<std::string> inputTests;
     std::vector<std::string> outputTests;
 
-    for (auto& test: response.input()) {
+    for (auto& test: *response.mutable_input()) {
         inputTests.push_back(std::move(test));
     }
 
-    for (auto& test: response.output()) {
+    for (auto& test: *response.mutable_output()) {
         outputTests.push_back(std::move(test));
     }
 

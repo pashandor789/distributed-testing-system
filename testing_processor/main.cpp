@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
             [i, &config]() {
                 NDTS::NTestingProcessor::TTestingProcessorConfig instanceConfig = config;
 
-                std::filesystem::path localStoragePath = std::to_string(i);
+                std::filesystem::path localStoragePath = "localStorage" + std::to_string(i);
 
                 if (!std::filesystem::exists(localStoragePath) && !std::filesystem::create_directory(localStoragePath)) {
                     throw std::runtime_error("can't create local storage for: " + localStoragePath.string());

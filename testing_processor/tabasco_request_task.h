@@ -2,6 +2,8 @@
 
 #include "task_batcher_storage_coordinator/grpc/proto/tabasco_grpc.grpc.pb.h"
 
+#include "utils/expected.h"
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -19,13 +21,17 @@ struct TGetBatchResponse {
     std::vector<std::string> outputTests;
 };
 
+struct TErrorResponse {
+    std::string msg;
+};
+
 class TTabascoRequestTask {
 public:
     TTabascoRequestTask(std::shared_ptr<NTabasco::TTabascoGRPC::Stub> tabasco);
 
-    TGetScriptsResponse GetScripts(uint64_t taskId, uint64_t buildId);
+    TExpected<TGetScriptsResponse, TErrorResponse> GetScripts(uint64_t taskId, uint64_t buildId);
 
-    TGetBatchResponse GetBatch(uint64_t taskId, uint64_t batchId);
+    TExpected<TGetBatchResponse, TErrorResponse> GetBatch(uint64_t taskId, uint64_t batchId);
 private:
     std::shared_ptr<NTabasco::TTabascoGRPC::Stub> tabasco_;
 };

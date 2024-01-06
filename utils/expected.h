@@ -5,7 +5,7 @@
 template <typename TError>
 class TUnexpected {
 public:
-    TUnexpected(TError value)
+    explicit TUnexpected(TError value)
         : value_(std::move(value))
     {}
 
@@ -23,11 +23,11 @@ public:
         : variant_(std::move(unexpected.value_))
     {}
 
-    TValue Value() {
+    TValue& Value() {
         return std::get<TValue>(variant_);
     }
 
-    TError Error() {
+    TError& Error() {
         return std::get<TError>(variant_);
     }
 
