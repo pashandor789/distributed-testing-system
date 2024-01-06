@@ -7,16 +7,8 @@
 
 #include <variant>
 
-std::string Join(std::vector<std::string> data, const std::string& separator = " ");
-
-std::vector<std::string> FindMissingJSONFields(
-    const std::vector<std::string>& expectedFields,
-    const nlohmann::json& jsonData
-);
-
-using JSONParseResult = TExpected<nlohmann::json, std::string>;
-
-JSONParseResult ParseJSON(
+// on error return's string of missing fields separated with ','
+TExpected<nlohmann::json, std::string> ParseJSON(
     const std::string& serializedJSON,
     const std::vector<std::string>& expectedFields
 );

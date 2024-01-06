@@ -56,7 +56,7 @@ void TTestingProcessor::Process(TTestingProcessorRequest request) {
 
     Prepare(request);
     auto report = Test(request);
-    // Commit(std::move(report));
+    Commit(std::move(report));
 
     container_.Kill();
 
@@ -64,14 +64,18 @@ void TTestingProcessor::Process(TTestingProcessorRequest request) {
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
     uint64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
-
-    std::cout << 1.0 * time / 1000  << std::endl;
 }
 
 bool TTestingProcessor::Prepare(TTestingProcessorRequest& request) {
     TTabascoRequestTask tabascoRequestTask(tabasco_);
 
-    TGetScriptsResponse scripts = tabascoRequestTask.GetScripts(request.taskId, request.buildId);
+    auto getScriptsResponse = tabascoRequestTask.GetScripts(request.taskId, request.buildId);
+
+    if (getScriptsResponse.HasError()) {
+        return false;
+    }
+
+    TGetScriptsResponse scripts = std::move(getScriptsResponse.Value());
 
     container_.CreateFile(INIT_SCRIPT_PATH, std::move(scripts.initScript));
     container_.Exec({"chmod", "+x", INIT_SCRIPT_PATH});
@@ -157,7 +161,15 @@ std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& re
     std::vector<TTestingReport> report;
 
     for (size_t batchIndex = 0; batchIndex < request.batchCount; ++batchIndex) {
-        TGetBatchResponse tests = tabascoRequestTask.GetBatch(request.taskId, batchIndex);
+        auto getBatchResponse = tabascoRequestTask.GetBatch(request.taskId, batchIndex);
+
+        if (getBatchResponse.HasError()) {
+            report.emplace_back(0, 0);
+            report.back().verdict = TVerdict::CRASH;
+            return report;
+        }
+
+        TGetBatchResponse tests = std::move(getBatchResponse.Value());
         size_t testsSize = tests.inputTests.size();
 
         for (size_t i = 0; i < testsSize; ++i) {

@@ -18,8 +18,8 @@ std::string Join(std::vector<std::string> data, const std::string& separator) {
 }
 
 std::vector<std::string> FindMissingJSONFields(
-        const std::vector<std::string>& expectedFields,
-        const nlohmann::json& jsonData
+    const std::vector<std::string>& expectedFields,
+    const nlohmann::json& jsonData
 ) {
     std::vector<std::string> missingFields;
     for (const auto& fieldName: expectedFields) {
@@ -30,9 +30,9 @@ std::vector<std::string> FindMissingJSONFields(
     return missingFields;
 }
 
-JSONParseResult ParseJSON(
-        const std::string& serializedJSON,
-        const std::vector<std::string>& expectedFields
+TExpected<nlohmann::json, std::string> ParseJSON(
+    const std::string& serializedJSON,
+    const std::vector<std::string>& expectedFields
 ) {
     nlohmann::json data = nlohmann::json::parse(serializedJSON, nullptr, false);
 
