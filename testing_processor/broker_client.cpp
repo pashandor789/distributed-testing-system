@@ -1,4 +1,4 @@
-#include "brocker_client.h"
+#include "broker_client.h"
 
 #include <ev.h>
 #include <amqpcpp.h>
@@ -13,13 +13,13 @@
 
 namespace NDTS::NTestingProcessor {
 
-TBrockerClient::TBrockerClient(const TTestingProcessorConfig& config)
-    : serverURL_(config.brocker_client_config().server_url())
-    , queueName_(config.brocker_client_config().queue_name())
+TBrokerClient::TBrokerClient(const TTestingProcessorConfig& config)
+    : serverURL_(config.broker_client_config().server_url())
+    , queueName_(config.broker_client_config().queue_name())
     , testingProcessor_(config)
 {}
 
-void TBrockerClient::Run() {
+void TBrokerClient::Run() {
     auto *loop = ev_loop_new(0);
 
     AMQP::LibEvHandler handler(loop);
@@ -44,7 +44,7 @@ void TBrockerClient::Run() {
     );
 
 
-    std::cerr << "Started instance of TBrockerClient with TTestingProcessor" << std::endl;
+    std::cerr << "Started instance of TBrokerClient with TTestingProcessor" << std::endl;
     ev_run(loop, 0);
 
     throw std::runtime_error("Connection error detected!");

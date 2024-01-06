@@ -11,7 +11,7 @@ include_directories(${DTS_ROOT_PATH})
 
 add_executable(
     testing_processor
-    brocker_client.cpp
+    broker_client.cpp
     docker_container.cpp
     tabasco_request_task.cpp
     testing_processor.cpp

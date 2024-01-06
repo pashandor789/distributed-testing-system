@@ -1,4 +1,4 @@
-#include "brocker_client.h"
+#include "broker_client.h"
 
 #include <argparse/argparse.hpp>
 #include <google/protobuf/text_format.h>
@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
 
                 instanceConfig.set_local_storage_path(localStoragePath);
 
-                NDTS::NTestingProcessor::TBrockerClient client(instanceConfig);
+                NDTS::NTestingProcessor::TBrokerClient client(instanceConfig);
                 client.Run();
             }
         );

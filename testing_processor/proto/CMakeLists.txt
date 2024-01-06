@@ -3,7 +3,7 @@ find_package(Protobuf REQUIRED)
 set(Protobuf_PROTOC_EXECUTABLE /usr/bin/protoc)
 set(
     PROTO_FILES 
-    brocker_client.proto
+    broker_client.proto
     docker_container.proto
     testing_processor_config.proto
 )
