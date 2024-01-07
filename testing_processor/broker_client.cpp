@@ -4,11 +4,10 @@
 #include <amqpcpp.h>
 #include <amqpcpp/libev.h>
 
+#include <glog/logging.h>
+
 #include <nlohmann/json.hpp>
 
-#include <syncstream>
-
-#include "testing_processor.h"
 #include "testing_processor_request.h"
 
 namespace NDTS::NTestingProcessor {
@@ -36,15 +35,23 @@ void TBrokerClient::Run() {
 
             auto requestJson = nlohmann::json::parse(std::move(body), nullptr, false);
             auto request = TTestingProcessorRequest(requestJson);
-            
+
+            LOG(INFO) << "Received submission with id: " <<  request.submissionId;
+
             this->testingProcessor_.Process(std::move(request));
 
             channel.ack(deliveryTag);
         }
     );
 
+    google::InitGoogleLogging("testingProcessor");
+    google::SetStderrLogging(google::INFO);
 
-    std::cerr << "Started instance of TBrokerClient with TTestingProcessor" << std::endl;
+    FLAGS_log_prefix = false;
+    FLAGS_logtostderr = true;
+    FLAGS_colorlogtostderr = true;
+
+    LOG(INFO) << "Started instance of TBrokerClient with TTestingProcessor";
     ev_run(loop, 0);
 
     throw std::runtime_error("Connection error detected!");

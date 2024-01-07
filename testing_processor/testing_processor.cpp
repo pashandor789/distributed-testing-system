@@ -1,7 +1,11 @@
+#include "commit_service_request.h"
 #include "testing_processor.h"
+#include "testing_report.h"
 #include "tabasco_request_task.h"
 
 #include <nlohmann/json.hpp>
+
+#include <glog/logging.h>
 
 #include <filesystem>
 
@@ -21,31 +25,11 @@ static const fs::path CHECKER_PATH = "/usr/bin/diff";
 static const fs::path EXECUTOR_SCRIPT_FILE = "executor";
 static const fs::path EXECUTOR_SCRIPT_PATH = USER_ROOT_PATH / EXECUTOR_SCRIPT_FILE;
 
-enum class TVerdict {
-    OK = 0,
-    WA = 1,
-    TL = 2,
-    ML = 3,
-    RE = 4,
-    CRASH = 5
-};
-
-struct TTestingReport {
-    TTestingReport(uint64_t cpuTimeElapsedMicroSeconds, uint64_t memorySpent)
-        : cpuTimeElapsedMicroSeconds(cpuTimeElapsedMicroSeconds)
-        , memorySpent(memorySpent)
-        , verdict(TVerdict::OK)
-    {}
-
-    TVerdict verdict;
-    uint64_t cpuTimeElapsedMicroSeconds;
-    uint64_t memorySpent;
-};
-
 TTestingProcessor::TTestingProcessor(const TTestingProcessorConfig& config)
     : container_(config.docker_container_config())
     , tabasco_(NTabasco::TTabascoGRPC::NewStub(grpc::CreateChannel(config.tabasco_url(), grpc::InsecureChannelCredentials())))
     , localStoragePath_(config.local_storage_path())
+    , commitServiceURL_(config.commit_service_url())
 {}
 
 void TTestingProcessor::Process(TTestingProcessorRequest request) {
@@ -56,7 +40,7 @@ void TTestingProcessor::Process(TTestingProcessorRequest request) {
 
     Prepare(request);
     auto report = Test(request);
-    Commit(std::move(report));
+    Commit(request, std::move(report));
 
     container_.Kill();
 
@@ -72,6 +56,7 @@ bool TTestingProcessor::Prepare(TTestingProcessorRequest& request) {
     auto getScriptsResponse = tabascoRequestTask.GetScripts(request.taskId, request.buildId);
 
     if (getScriptsResponse.HasError()) {
+        LOG(ERROR) << "TabascoRequestTask failed: " <<  getScriptsResponse.Error().msg << " for submission: " << request.submissionId;
         return false;
     }
 
@@ -191,7 +176,7 @@ std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& re
             nlohmann::json executeReport = nlohmann::json::parse(deserializedReport, nullptr, false);
 
             report.emplace_back(
-                executeReport["cpuTimeElapsedMicroSeconds"],
+                static_cast<uint64_t>(executeReport["cpuTimeElapsedMicroSeconds"]) / 1'000,
                 executeReport["memorySpent"]
             );
 
@@ -222,15 +207,12 @@ std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& re
     return report;
 }
 
-void TTestingProcessor::Commit(std::vector<TTestingReport>&& report) {
-    for (size_t i = 0; i < report.size(); ++i) {
-        printf(
-            "commited test #%ld %ld %ld %d\n",
-            i + 1,
-            report[i].cpuTimeElapsedMicroSeconds,
-            report[i].memorySpent,
-            static_cast<int>(report[i].verdict)
-        );
+void TTestingProcessor::Commit(TTestingProcessorRequest& request, std::vector<TTestingReport>&& report) {
+    TCommitServiceRequest commitServiceRequest(commitServiceURL_);
+    auto err = commitServiceRequest.Commit(request.submissionId, report);
+
+    if (err.has_value()) {
+        LOG(ERROR) << "CommitService failed: " << err.value() << " for submission: " << request.submissionId;
     }
 }
 

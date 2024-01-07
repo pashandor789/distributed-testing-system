@@ -69,7 +69,7 @@ def uploaded_test_big_string():
     return tests
 
 
-init_script = 'g++ $1 -o executable'
+init_script = '''mv $1 main.cpp; g++ main.cpp -o executable'''
 execute_script = './executable'
 init_script_id = 1
 execute_script_id = 1

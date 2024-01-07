@@ -24,12 +24,13 @@ private:
 
     std::vector<TTestingReport> Test(TTestingProcessorRequest& request);
 
-    void Commit(std::vector<TTestingReport>&& report);
+    void Commit(TTestingProcessorRequest& request, std::vector<TTestingReport>&& report);
 
 private:
     TDockerContainer container_;
     std::shared_ptr<NTabasco::TTabascoGRPC::Stub> tabasco_;
     std::filesystem::path localStoragePath_;
+    std::string commitServiceURL_;
 };
 
 } // end of NDTS::NTestingProcessor namespace

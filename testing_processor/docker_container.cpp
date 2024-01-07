@@ -104,13 +104,13 @@ int TDockerContainer::ExecBash(
 }
 
 void TDockerContainer::Kill() {
-    std::string command = "/usr/bin/docker stop -s SIGKILL";
-
-    command
-        .append(" ")
-        .append(containerId_);
-
-    std::system(command.c_str());
+//    std::string command = "/usr/bin/docker stop -s SIGKILL";
+//
+//    command
+//        .append(" ")
+//        .append(containerId_);
+//
+//    std::system(command.c_str());
 }
 
 void TDockerContainer::MoveFileInside(const fs::path& outsidePath, const fs::path& containerPath) {
@@ -128,13 +128,13 @@ void TDockerContainer::MoveFileInside(const fs::path& outsidePath, const fs::pat
 }
 
 void TDockerContainer::Remove() {
-    std::string command = "/usr/bin/docker rm";
-
-    command
-        .append(" ")
-        .append(containerId_);
-
-    std::system(command.c_str());  
+//    std::string command = "/usr/bin/docker rm";
+//
+//    command
+//        .append(" ")
+//        .append(containerId_);
+//
+//    std::system(command.c_str());
 }
 
 void TDockerContainer::CreateFile(const fs::path& path, std::string content) {
