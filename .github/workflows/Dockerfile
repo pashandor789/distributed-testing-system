@@ -139,4 +139,28 @@ RUN pip install \
     grpcio-tools \
     pytest
 
+# begin of curlpp download
+
+RUN apt-get install libcurl4-openssl-dev
+
+RUN git clone https://github.com/jpbarrette/curlpp.git && \
+    cd curlpp && \
+    mkdir build && \
+    cd build && \
+    cmake .. && \
+    cmake --build . -- -j $(nproc) && \
+    make install
+
+# end of curlpp download
+
+# begin of glog download
+
+RUN git clone https://github.com/google/glog.git && \
+    cd glog && \
+    cmake -S . -B build -G "Unix Makefiles" && \
+    cmake --build build && \
+    cmake --build build --target install
+
+# end of glog download
+
 WORKDIR /

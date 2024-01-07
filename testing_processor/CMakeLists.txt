@@ -3,6 +3,8 @@ project(testing_processor)
 
 set(CMAKE_CXX_STANDARD 23)
 
+find_package(glog REQUIRED)
+
 include_directories(${CMAKE_BINARY_DIR})
 
 set(DTS_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/..)
@@ -12,9 +14,11 @@ include_directories(${DTS_ROOT_PATH})
 add_executable(
     testing_processor
     broker_client.cpp
+    commit_service_request.cpp
     docker_container.cpp
     tabasco_request_task.cpp
     testing_processor.cpp
+    testing_report.cpp
     main.cpp
 )
 
@@ -26,5 +30,8 @@ target_link_libraries(
     testing_processor_proto
     tabasco_grpc_proto
     amqpcpp
+    curlpp
+    curl
+    glog::glog
     ev
 )
