@@ -14,5 +14,5 @@
 /usr/lib/libamqpcpp.so.4.3
 /usr/lib/x86_64-linux-gnu/libev.so.4
 /usr/local/lib/libprotobuf.so.28
-/usr/lib/x86_64-linux-gnu/libcurlpp.so.1
+/usr/local/lib/libcurlpp.so.1
 /usr/local/lib/libglog.so.1
