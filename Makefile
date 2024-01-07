@@ -5,7 +5,7 @@ prepare:
 
 build: prepare
 	cmake -S . -B ./build -DDTS_TEST=ON
-	cmake --build ./build -- -j "$(nproc)"
+	cmake --build ./build -- -j $(nproc)
 
 build_services: build
 	docker-compose build
