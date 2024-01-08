@@ -1,6 +1,7 @@
 build/
 *build-debug/
 *build-release/
+clion_build/
 downloads/
 tmp/
 .idea/

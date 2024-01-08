@@ -58,20 +58,24 @@ bool TBuildDataBase::CreateBuild(std::string buildName, uint64_t executeScriptId
     }
 }
 
-TScripts TBuildDataBase::GetScripts(uint64_t buildId) {
-    pqxx::nontransaction nonTx(connection_);
-    pqxx::result scriptsId = nonTx.exec_params("SELECT * FROM builds WHERE id = $1", buildId);
+std::optional<TScripts> TBuildDataBase::GetScripts(uint64_t buildId) {
+    try {
+        pqxx::nontransaction nonTx(connection_);
+        pqxx::result scriptsId = nonTx.exec_params("SELECT * FROM builds WHERE id = $1", buildId);
 
-    uint64_t initScriptId = scriptsId[0][2].as<uint64_t>();
-    pqxx::result initScriptRows = nonTx.exec_params("SELECT * FROM init_scripts WHERE id = $1", initScriptId);
+        uint64_t initScriptId = scriptsId[0][2].as<uint64_t>();
+        pqxx::result initScriptRows = nonTx.exec_params("SELECT * FROM init_scripts WHERE id = $1", initScriptId);
 
-    uint64_t executeScriptId = scriptsId[0][3].as<uint64_t>();
-    pqxx::result executeScriptRows = nonTx.exec_params("SELECT * FROM execute_scripts WHERE id = $1", executeScriptId);
+        uint64_t executeScriptId = scriptsId[0][3].as<uint64_t>();
+        pqxx::result executeScriptRows = nonTx.exec_params("SELECT * FROM execute_scripts WHERE id = $1", executeScriptId);
 
-    return TScripts{
-        .initScript = initScriptRows[0][2].as<std::string>(),
-        .executeScript = executeScriptRows[0][2].as<std::string>()
-    };
+        return TScripts{
+            .initScript = initScriptRows[0][2].as<std::string>(),
+            .executeScript = executeScriptRows[0][2].as<std::string>()
+        };
+    } catch (std::exception& e) {
+        return std::nullopt;
+    }
 }
 
 TInitScripts TBuildDataBase::GetInitScripts() {
