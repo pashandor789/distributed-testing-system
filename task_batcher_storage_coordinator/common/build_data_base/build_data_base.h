@@ -1,6 +1,8 @@
 #pragma once 
 
 #include <pqxx/pqxx>
+#include <optional>
+
 #include "common/proto/build_data_base.pb.h"
 
 #include "data_repr.h"
@@ -17,7 +19,7 @@ public:
 
     bool CreateBuild(std::string buildName, uint64_t executeScriptId, uint64_t initScriptId);
 
-    TScripts GetScripts(uint64_t buildId);
+    std::optional<TScripts> GetScripts(uint64_t buildId);
 
     TExecuteScripts GetExecuteScripts();
 
