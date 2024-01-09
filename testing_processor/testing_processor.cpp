@@ -53,7 +53,7 @@ void TTestingProcessor::Process(TTestingProcessorRequest request) {
 bool TTestingProcessor::Prepare(TTestingProcessorRequest& request) {
     TTabascoRequestTask tabascoRequestTask(tabasco_);
 
-    auto getScriptsResponse = tabascoRequestTask.GetScripts(request.taskId, request.buildId);
+    auto getScriptsResponse = tabascoRequestTask.GetScripts(request.taskId, request.buildName);
 
     if (getScriptsResponse.HasError()) {
         LOG(ERROR) << "TabascoRequestTask failed: " <<  getScriptsResponse.Error().msg << " for submission: " << request.submissionId;
@@ -212,6 +212,11 @@ void TTestingProcessor::Commit(TTestingProcessorRequest& request, std::vector<TT
     auto err = commitServiceRequest.Commit(request.submissionId, report);
 
     if (err.has_value()) {
+        nlohmann::json kek;
+
+        kek["items"] = ToJSON(report);
+
+        std::cerr << kek.dump() << std::endl;
         LOG(ERROR) << "CommitService failed: " << err.value() << " for submission: " << request.submissionId;
     }
 }

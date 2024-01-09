@@ -10,8 +10,6 @@ add_executable(
     main.cpp
     parse_json.cpp
     handlers/builds_handler.cpp
-    handlers/execute_scripts_handler.cpp
-    handlers/init_scripts_handler.cpp
     handlers/create_build_handler.cpp
     handlers/upload_init_script_handler.cpp
     handlers/upload_execute_script_handler.cpp
@@ -30,5 +28,4 @@ target_link_libraries(
     http_tabasco
     tabasco_common_proto
     tabasco_storage_client
-    build_data_base
 )

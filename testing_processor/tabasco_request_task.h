@@ -29,7 +29,7 @@ class TTabascoRequestTask {
 public:
     TTabascoRequestTask(std::shared_ptr<NTabasco::TTabascoGRPC::Stub> tabasco);
 
-    TExpected<TGetScriptsResponse, TErrorResponse> GetScripts(uint64_t taskId, uint64_t buildId);
+    TExpected<TGetScriptsResponse, TErrorResponse> GetScripts(uint64_t taskId, std::string buildName);
 
     TExpected<TGetBatchResponse, TErrorResponse> GetBatch(uint64_t taskId, uint64_t batchId);
 private:

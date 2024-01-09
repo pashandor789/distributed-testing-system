@@ -16,6 +16,8 @@ import pytest
 
 HTTP_TABASCO_URL = 'http://http_tabasco:8080'
 GRPC_TABASCO_URL = 'grpc_tabasco:9090'
+# HTTP_TABASCO_URL = 'http://localhost:2228'
+# GRPC_TABASCO_URL = 'localhost:2229'
 
 
 def post_request(url, **kwargs):
@@ -71,10 +73,6 @@ def uploaded_test_big_string():
 
 init_script = '''mv $1 main.cpp; g++ main.cpp -o executable'''
 execute_script = './executable'
-init_script_id = 1
-execute_script_id = 1
-build_id = 1
-
 
 def upload_tests(task_id, tests):
     files = copy.deepcopy(tests)
@@ -85,59 +83,12 @@ def upload_tests(task_id, tests):
 
 
 class TestHTTPTabasco:
-    def test_upload_scripts(self):
-        data = {
-            'scriptName': 'testInit',
-            'content': init_script
-        }
-
-        response = post_request(f'{HTTP_TABASCO_URL}/uploadInitScript', json=data)
-
-        assert response.status_code == 200, f'uploadInitScript failed: {response.content.decode()}'
-
-    def test_upload_execute_script(self):
-        data = {
-            'scriptName': 'testExecute',
-            'content': execute_script
-        }
-
-        response = post_request(f'{HTTP_TABASCO_URL}/uploadExecuteScript', json=data)
-
-        assert response.status_code == 200, f'uploadExecuteScript failed: {response.content.decode()}'
-
-    def test_init_scripts_handler(self):
-        response = get_request(f'{HTTP_TABASCO_URL}/initScripts')
-
-        assert response.status_code == 200, f'initScripts failed: {response.content.decode()}'
-
-        scripts = json.loads(response.content.decode())["items"]
-
-        filtered_scripts = list(filter(lambda x: x['content'] == init_script, scripts))
-
-        assert len(filtered_scripts) > 0, f'init script with content {init_script} was not found in {scripts}'
-
-        global init_script_id
-        init_script_id = filtered_scripts[0]["id"]
-
-    def test_execute_scripts_handler(self):
-        response = get_request(f'{HTTP_TABASCO_URL}/executeScripts')
-
-        assert response.status_code == 200, f'executeScripts failed: {response.content.decode()}'
-
-        scripts = json.loads(response.content.decode())["items"]
-
-        filtered_scripts = list(filter(lambda x: x['content'] == execute_script, scripts))
-
-        assert len(filtered_scripts) > 0, f'execute script with content {execute_script} was not found in {scripts}'
-
-        global execute_script_id
-        execute_script_id = filtered_scripts[0]["id"]
-
     def test_create_build(self):
         data = {
             'buildName': 'testBuild',
-            'executeScriptId': execute_script_id,
-            'initScriptId': init_script_id
+            'description': 'test description',
+            'executeScript': execute_script,
+            'initScript': init_script
         }
 
         response = post_request(f'{HTTP_TABASCO_URL}/createBuild', json=data)
@@ -151,19 +102,16 @@ class TestHTTPTabasco:
         assert response.status_code == 200, f'builds failed: {response.content.decode()}'
 
         filter_func = lambda x: (
-            x['executeScript']['id'] == execute_script_id and
-            x['initScript']['id'] == init_script_id
+            x['executeScript'] == execute_script and
+            x['initScript'] == init_script
         )
 
         filtered_builds = list(filter(filter_func, builds))
 
         assert len(filtered_builds) > 0, f'build was not found in {filtered_builds}'
 
-        assert filtered_builds[0]['executeScript']['content'] == execute_script
-        assert filtered_builds[0]['initScript']['content'] == init_script
-
-        global build_id
-        build_id = filtered_builds[0]["id"]
+        assert filtered_builds[0]['executeScript'] == execute_script
+        assert filtered_builds[0]['initScript'] == init_script
 
     def test_upload_tests_handler_small_tests(self, uploaded_test_a_plus_b):
         upload_tests(task_id=0, tests=uploaded_test_a_plus_b)
@@ -187,7 +135,7 @@ def get_grpc_tabasco_stub():
 def get_script_and_get_batch(task_id, expected_tests):
     stub = get_grpc_tabasco_stub()
 
-    request = proto.tabasco_grpc_pb2.TGetScriptsRequest(task_id=task_id, build_id=build_id)
+    request = proto.tabasco_grpc_pb2.TGetScriptsRequest(task_id=task_id, build_name='testBuild')
     response = stub.GetScripts(request)
 
     assert response.init_script == init_script
@@ -221,3 +169,40 @@ class TestGRPCTabasco:
 
     def test_get_script_and_get_batch_big_tests(self, uploaded_test_big_string):
         get_script_and_get_batch(1, uploaded_test_big_string)
+
+
+# import pika
+#
+#
+# def get_broker_channel():
+#     connection = pika.BlockingConnection(pika.ConnectionParameters('broker'))
+#     channel = connection.channel()
+#     channel.queue_declare(queue='test')
+#     return channel
+#
+#
+# user_data_a_plus_b = '''
+# #include <iostream>
+#
+# int main() {
+#     int a, b;
+#     std::cin >> a >> b;
+#     std::cout << a + b;
+# }
+# '''
+#
+#
+# class TestTestingProcessor:
+#     def test_submit_small_test(self):
+#         channel = get_broker_channel()
+#
+#         json_message = {
+#             "submissionId": 0,
+#             "buildId": 1,
+#             "userData": user_data_a_plus_b,
+#             "taskId": 0,
+#             "memoryLimit": 10241024,
+#             "cpuTimeLimitMilliSeconds": 2000
+#         }
+#
+#         channel

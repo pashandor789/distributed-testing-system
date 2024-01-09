@@ -9,7 +9,6 @@ set(
     PROTO_FILES 
     tabasco_config.proto
     storage_client.proto
-    build_data_base.proto
 )
 
 set(PROTOBUF_GENERATED_DIR ${CMAKE_CURRENT_BINARY_DIR})

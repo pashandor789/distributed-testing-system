@@ -1,8 +1,6 @@
 #include "server.h"
 
 #include "handlers/builds_handler.h"
-#include "handlers/execute_scripts_handler.h"
-#include "handlers/init_scripts_handler.h"
 #include "handlers/create_build_handler.h"
 #include "handlers/upload_execute_script_handler.h"
 #include "handlers/upload_init_script_handler.h"
@@ -28,7 +26,6 @@ THandlerCallback GetHandlerCallback(TTabascoHTTPServer* server) {
 TTabascoHTTPServer::TTabascoHTTPServer(const TTabascoServerConfig& config)
     : batchSize_(config.batch_size())
     , storageClient_(config.storage_client_config())
-    , builds_(config.build_data_base_config())
 {
     InitHandlers();
 
@@ -51,14 +48,6 @@ void TTabascoHTTPServer::InitHandlers() {
 
     CROW_ROUTE(app_, "/createBuild").methods("POST"_method) (
         GetHandlerCallback<TCreateBuildHandler>(this)
-    );
-
-    CROW_ROUTE(app_, "/initScripts").methods("GET"_method) (
-        GetHandlerCallback<TInitScriptsHandler>(this)
-    );
-
-    CROW_ROUTE(app_, "/executeScripts").methods("GET"_method) (
-        GetHandlerCallback<TExecuteScriptsHandler>(this)
     );
 
     CROW_ROUTE(app_, "/builds").methods("GET"_method) (

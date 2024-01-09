@@ -28,7 +28,7 @@ TCommitServiceRequest::TCommitError TCommitServiceRequest::Commit(uint64_t submi
         request.setOpt(new curlpp::options::Url(url_));
 
         std::list<std::string> header;
-        header.emplace_back("Content-Type: application/octet-stream");
+        header.emplace_back("Content-Type: application/json");
 
         request.setOpt(new curlpp::options::HttpHeader(header));
 

@@ -9,7 +9,7 @@ struct TTestingProcessorRequest {
     template <typename TJSON>
     TTestingProcessorRequest(TJSON json)
         : submissionId(json["submissionId"])
-        , buildId(json["buildId"])
+        , buildName(json["buildName"])
         , userData(std::move(json["userData"]))
         , taskId(json["taskId"])
         , memoryLimit(json["memoryLimit"])
@@ -18,7 +18,7 @@ struct TTestingProcessorRequest {
     {}
 
     uint64_t submissionId;
-    uint64_t buildId;
+    std::string buildName;
     std::string userData;
     uint64_t taskId;
     uint64_t memoryLimit;

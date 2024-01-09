@@ -14,8 +14,9 @@ public:
 
 private:
     std::string buildName_;
-    uint64_t executeScriptId_;
-    uint64_t initScriptId_;
+    std::string executeScript_;
+    std::string initScript_;
+    std::string description_;
 };
 
 } // end of NDTS::TTabasco namespace

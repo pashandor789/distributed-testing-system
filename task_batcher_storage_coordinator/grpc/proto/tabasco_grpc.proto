@@ -19,7 +19,7 @@ message TGetBatchResponse {
 
 message TGetScriptsRequest {
     uint64 task_id = 1;
-    uint64 build_id = 2;
+    string build_name = 2;
 }
 
 message TGetScriptsResponse {
