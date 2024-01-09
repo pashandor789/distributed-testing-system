@@ -22,13 +22,13 @@ public:
 
     bool CreateTask(const std::string& taskId);
 
-    void UploadTests(
+    bool UploadTests(
         std::vector<std::string>&& tests,
         const std::string& testSuffix,
         const std::string& taskId
     );
 
-    void UploadTaskBatches(
+    bool UploadTaskBatches(
         std::vector<std::vector<uint64_t>>&& batches,
         const std::string& taskId,
         size_t batchSize

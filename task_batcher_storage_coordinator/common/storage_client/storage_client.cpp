@@ -26,7 +26,7 @@ bool TStorageClient::UpdateScriptContent(
 
     auto data = nlohmann::json::parse(std::move(maybeData.value()), nullptr, false);
 
-    if (data.is_discarded()) {
+    if (data.is_discarded() || !data.contains(scriptName)) {
         return false;
     }
 
@@ -58,18 +58,23 @@ bool TStorageClient::CreateTask(const std::string& taskId) {
     return impl_.CreateBucket(taskId);
 }
 
-void TStorageClient::UploadTests(
+bool TStorageClient::UploadTests(
     std::vector<std::string>&& tests,
     const std::string& testSuffix,
     const std::string& taskId
 ) {
     for (size_t i = 0; i < tests.size(); ++i) {
         std::string fileName = std::to_string(i + 1) + "_" + testSuffix;
-        impl_.UpsertData(taskId, fileName, std::move(tests[i]));
+
+        if (!impl_.UpsertData(taskId, fileName, std::move(tests[i]))) {
+            return false;
+        }
     }
+
+    return true;
 }
 
-void TStorageClient::UploadTaskBatches(
+bool TStorageClient::UploadTaskBatches(
     std::vector<std::vector<uint64_t>>&& batches,
     const std::string& taskId,
     size_t batchSize
@@ -78,7 +83,7 @@ void TStorageClient::UploadTaskBatches(
     metaData["batchSize"] = batchSize;
     metaData["batches"] = std::move(batches);
 
-    impl_.UpsertData(taskId, "meta.json", metaData.dump());
+    return impl_.UpsertData(taskId, "meta.json", metaData.dump());
 }
 
 TBuilds TStorageClient::GetBuilds() {
@@ -103,7 +108,7 @@ std::optional<std::string> TStorageClient::GetTest(
     return impl_.GetData(taskId, testIndex + "_" + testSuffix);
 }
 
-std::optional<std::string> TStorageClient::GetTaskMeta(const std::string &taskId) {
+std::optional<std::string> TStorageClient::GetTaskMeta(const std::string& taskId) {
     return impl_.GetData(taskId, "meta.json");
 }
 

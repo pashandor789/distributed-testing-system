@@ -1,6 +1,6 @@
 #include "upload_init_script_handler.h"
 
-#include "parse_json.h"
+#include "utils/parse_json.h"
 
 #include <vector>
 
