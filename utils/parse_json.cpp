@@ -48,3 +48,10 @@ TExpected<nlohmann::json, std::string> ParseJSON(
 
     return data;
 }
+
+bool ValidateJSON(
+    const nlohmann::json& data,
+    const std::vector<std::string>& expectedFields
+) {
+    return FindMissingJSONFields(data, expectedFields).empty();
+}

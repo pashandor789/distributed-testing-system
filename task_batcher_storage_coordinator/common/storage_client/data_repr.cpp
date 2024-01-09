@@ -30,10 +30,21 @@ nlohmann::json TBuild::MoveToJSON() {
 TBuild TBuild::FromJSON(nlohmann::json data) {
     TBuild build;
 
-    build.description = std::move(data["description"]);
-    build.name = std::move(data["name"]);
-    build.initScript = std::move(data["initScript"]);
-    build.executeScript = std::move(data["executeScript"]);
+    if (data.contains("description")) {
+        build.description = std::move(data["description"]);
+    }
+
+    if (data.contains("name")) {
+        build.name = std::move(data["name"]);
+    }
+
+    if (data.contains("initScript")) {
+        build.initScript = std::move(data["initScript"]);
+    }
+
+    if (data.contains("executeScript")) {
+        build.executeScript = std::move(data["executeScript"]);
+    }
 
     return build;
 }

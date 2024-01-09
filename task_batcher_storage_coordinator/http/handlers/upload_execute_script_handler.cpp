@@ -1,13 +1,13 @@
 #include "upload_execute_script_handler.h"
 
-#include "parse_json.h"
+#include "utils/parse_json.h"
 
 #include <vector>
 
 namespace NDTS::NTabasco {
 
-bool TUploadExecuteScriptHandler::Parse(const crow::request& req, crow::response& res) {
-    auto parseResult = ParseJSON(req.body, {"scriptName", "content"});
+bool TUpdateExecuteScriptHandler::Parse(const crow::request& req, crow::response& res) {
+    auto parseResult = ParseJSON(req.body, {"buildName", "content"});
 
     if (parseResult.HasError()) {
         res.body = parseResult.Error();
@@ -23,7 +23,7 @@ bool TUploadExecuteScriptHandler::Parse(const crow::request& req, crow::response
     return true;
 }
 
-void TUploadExecuteScriptHandler::Handle(const crow::request& req, crow::response& res, const TContext& ctx) {
+void TUpdateExecuteScriptHandler::Handle(const crow::request& req, crow::response& res, const TContext& ctx) {
     if (!Parse(req, res)) {
         return;
     }

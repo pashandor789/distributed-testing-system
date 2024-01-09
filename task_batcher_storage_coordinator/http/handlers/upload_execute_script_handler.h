@@ -8,7 +8,7 @@
 
 namespace NDTS::NTabasco {
 
-class TUploadExecuteScriptHandler {
+class TUpdateExecuteScriptHandler {
 public:
     void Handle(const crow::request& req, crow::response& res, const TContext& ctx);
 
