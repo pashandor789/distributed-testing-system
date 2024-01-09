@@ -34,9 +34,7 @@ public:
 
         auto options = mongocxx::options::update().upsert(true);
 
-        collection.update_one(filter.view(), upsertDocument.view(), options);
-
-        return true;
+        return collection.update_one(filter.view(), upsertDocument.view(), options).operator bool();
     }
 
     bool InsertData(const std::string& bucketName, const std::string& fileName, std::string data) {
@@ -46,9 +44,7 @@ public:
             kvp("data", std::move(data))
         );
 
-        collection.insert_one(insertDocument.view());
-
-        return true;
+        return collection.insert_one(insertDocument.view()).operator bool();
     }
 
     bool CreateBucket(const std::string& bucketName) {
