@@ -6,8 +6,8 @@
 
 namespace NDTS::NTabasco {
 
-bool TUploadInitScriptHandler::Parse(const crow::request& req, crow::response& res) {
-    auto parseResult = ParseJSON(req.body, {"scriptName", "content"});
+bool TUpdateInitScriptHandler::Parse(const crow::request& req, crow::response& res) {
+    auto parseResult = ParseJSON(req.body, {"buildName", "content"});
 
     if (parseResult.HasError()) {
         res.body = parseResult.Error();
@@ -23,7 +23,7 @@ bool TUploadInitScriptHandler::Parse(const crow::request& req, crow::response& r
     return true;
 }
 
-void TUploadInitScriptHandler::Handle(const crow::request& req, crow::response& res, const TContext& ctx) {
+void TUpdateInitScriptHandler::Handle(const crow::request& req, crow::response& res, const TContext& ctx) {
     if (!Parse(req, res)) {
         return;
     }

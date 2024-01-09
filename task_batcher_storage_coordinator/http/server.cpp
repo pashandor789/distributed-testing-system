@@ -38,12 +38,12 @@ void TTabascoHTTPServer::InitHandlers() {
         GetHandlerCallback<TUploadTestsHandler>(this)
     );
 
-    CROW_ROUTE(app_, "/uploadInitScript").methods("POST"_method) (
-        GetHandlerCallback<TUploadInitScriptHandler>(this)
+    CROW_ROUTE(app_, "/updateInitScript").methods("POST"_method) (
+        GetHandlerCallback<TUpdateInitScriptHandler>(this)
     );
 
-    CROW_ROUTE(app_, "/uploadExecuteScript").methods("POST"_method) (
-        GetHandlerCallback<TUploadExecuteScriptHandler>(this)
+    CROW_ROUTE(app_, "/updateExecuteScript").methods("POST"_method) (
+        GetHandlerCallback<TUpdateExecuteScriptHandler>(this)
     );
 
     CROW_ROUTE(app_, "/createBuild").methods("POST"_method) (
