@@ -16,9 +16,6 @@ import pytest
 
 HTTP_TABASCO_URL = 'http://http_tabasco:8080'
 GRPC_TABASCO_URL = 'grpc_tabasco:9090'
-# HTTP_TABASCO_URL = 'http://localhost:2228'
-# GRPC_TABASCO_URL = 'localhost:2229'
-
 
 def post_request(url, **kwargs):
     return noexcept_request(url, requests.post, **kwargs)
@@ -73,6 +70,7 @@ def uploaded_test_big_string():
 
 init_script = '''mv $1 main.cpp; g++ main.cpp -o executable'''
 execute_script = './executable'
+
 
 def upload_tests(task_id, tests):
     files = copy.deepcopy(tests)
@@ -169,7 +167,6 @@ class TestGRPCTabasco:
 
     def test_get_script_and_get_batch_big_tests(self, uploaded_test_big_string):
         get_script_and_get_batch(1, uploaded_test_big_string)
-
 
 # import pika
 #
