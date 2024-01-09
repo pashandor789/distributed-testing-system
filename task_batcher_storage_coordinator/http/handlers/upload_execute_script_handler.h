@@ -15,7 +15,7 @@ public:
     bool Parse(const crow::request& req, crow::response& res);
 
 private:
-    std::string scriptName_;
+    std::string buildName_;
     std::string content_;
 };
 

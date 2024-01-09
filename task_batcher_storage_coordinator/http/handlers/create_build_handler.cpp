@@ -9,7 +9,7 @@ namespace NDTS::NTabasco {
 bool TCreateBuildHandler::Parse(const crow::request& req, crow::response& res) {
     auto parseResult = ParseJSON(
         req.body,
-        {"buildName", "executeScriptId", "initScriptId"}
+        {"buildName", "description", "initScript", "executeScript"}
     );
 
     if (parseResult.HasError()) {
@@ -21,8 +21,9 @@ bool TCreateBuildHandler::Parse(const crow::request& req, crow::response& res) {
     nlohmann::json data = parseResult.Value();
 
     buildName_ = std::move(data["buildName"]);
-    executeScriptId_ = data["executeScriptId"];
-    initScriptId_ = data["initScriptId"];
+    description_ = std::move(data["description"]);
+    executeScript_ = data["executeScript"];
+    initScript_ = data["initScript"];
 
     return true;
 }
@@ -32,11 +33,16 @@ void TCreateBuildHandler::Handle(const crow::request& req, crow::response& res, 
         return;
     }
 
+    TBuild build{
+        .name = std::move(buildName_),
+        .description = std::move(description_),
+        .initScript = std::move(initScript_),
+        .executeScript = std::move(executeScript_)
+    };
+
     bool success =
-        ctx.server->builds_.CreateBuild(
-                std::move(buildName_),
-                executeScriptId_,
-                initScriptId_
+        ctx.server->storageClient_.CreateBuild(
+            std::move(build)
         );
 
     if (!success) {

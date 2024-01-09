@@ -1,3 +1,2 @@
 add_subdirectory(proto)
 add_subdirectory(storage_client)
-add_subdirectory(build_data_base)

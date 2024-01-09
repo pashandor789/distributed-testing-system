@@ -3,7 +3,6 @@
 
 #include "common/proto/tabasco_config.pb.h"
 #include "common/storage_client/storage_client.h"
-#include "common/build_data_base/build_data_base.h"
 
 namespace NDTS::NTabasco {
 
@@ -17,7 +16,6 @@ public:
 
 public:
     TStorageClient storageClient_;
-    TBuildDataBase builds_;
 };
 
 } // end of NDTS::NTabasco namespace

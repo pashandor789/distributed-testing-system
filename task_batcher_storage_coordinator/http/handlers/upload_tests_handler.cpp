@@ -123,31 +123,6 @@ bool TUploadTestsHandler::Parse(const crow::request& req, crow::response& res) {
     return true;
 }
 
-void UploadStorageTests(
-    std::vector<std::string>&& tests,
-    const std::string& testSuffix,
-    const std::string& taskId,
-    TStorageClient& storageClient
-) {
-    for (size_t i = 0; i < tests.size(); ++i) {
-        std::string fileName = std::to_string(i + 1) + TEST_NUM_SEPARATOR + testSuffix;
-        storageClient.UploadData(taskId, fileName, std::move(tests[i]));
-    }
-}
-
-void UploadStorageBatches(
-    std::vector<std::vector<uint64_t>>&& batches,
-    const std::string& taskId,
-    TStorageClient& storageClient,
-    size_t batchSize
-) {
-    nlohmann::json metaData;
-    metaData["batchSize"] = batchSize;
-    metaData["batches"] = std::move(batches);
-
-    storageClient.UploadData(taskId, "meta.json", metaData.dump());
-}
-
 std::vector<std::vector<size_t>> SplitIntoBatches(
     const std::vector<std::string>& inputTests,
     const std::vector<std::string>& outputTests,
@@ -186,11 +161,26 @@ void TUploadTestsHandler::Handle(const crow::request& req, crow::response& res, 
 
     auto batches = SplitIntoBatches(inputTests_, outputTests_, ctx.server->batchSize_);
 
-    ctx.server->storageClient_.CreateBucket(taskId_);
-    
-    UploadStorageBatches(std::move(batches), taskId_, ctx.server->storageClient_, ctx.server->batchSize_);
-    UploadStorageTests(std::move(inputTests_), INPUT_TEST_SUFFIX, taskId_, ctx.server->storageClient_);
-    UploadStorageTests(std::move(outputTests_), OUTPUT_TEST_SUFFIX, taskId_, ctx.server->storageClient_);
+    ctx.server->storageClient_.CreateTask(taskId_);
+
+
+    ctx.server->storageClient_.UploadTaskBatches(
+        std::move(batches),
+        taskId_,
+        ctx.server->batchSize_
+    );
+
+    ctx.server->storageClient_.UploadTests(
+        std::move(inputTests_),
+        INPUT_TEST_SUFFIX,
+        taskId_
+    );
+
+    ctx.server->storageClient_.UploadTests(
+        std::move(outputTests_),
+        OUTPUT_TEST_SUFFIX,
+        taskId_
+    );
 }
 
 } // end of NDTS::TTabasco namespace 

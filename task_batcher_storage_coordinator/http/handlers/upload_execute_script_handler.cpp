@@ -17,7 +17,7 @@ bool TUploadExecuteScriptHandler::Parse(const crow::request& req, crow::response
 
     nlohmann::json data = parseResult.Value();
 
-    scriptName_ = std::move(data["scriptName"]);
+    buildName_ = std::move(data["buildName"]);
     content_ = std::move(data["content"]);
 
     return true;
@@ -29,8 +29,8 @@ void TUploadExecuteScriptHandler::Handle(const crow::request& req, crow::respons
     }
 
     bool success =
-        ctx.server->builds_.UploadExecuteScript(
-            std::move(scriptName_),
+        ctx.server->storageClient_.UploadExecuteScript(
+            std::move(buildName_),
             std::move(content_)
         );
 

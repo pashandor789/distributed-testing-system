@@ -1,32 +1,51 @@
 #pragma once
 
-#include <string>
-
-#include <memory>
-
 #include "common/proto/storage_client.pb.h"
+#include "impl/storage_client_impl.h"
+#include "data_repr.h"
 
 namespace NDTS::NTabasco {
-
-/* All methods of class return true on success, false otherwise */
 
 class TStorageClient {
 public:
     TStorageClient(const TStorageClientConfig& config);
 
-    /* works as upsert */
-    bool UploadData(const std::string& bucketName, const std::string& fileName, std::string data);
+    bool UploadInitScript(const std::string& buildName, std::string content);
 
-    /* create's entity for storing tests */
-    bool CreateBucket(const std::string& bucketName);
+    bool UploadExecuteScript(const std::string& buildName, std::string content);
 
-    std::pair<bool, std::string> GetData(const std::string& bucketName, const std::string& fileName);
+    bool CreateBuild(TBuild build);
+
+    std::optional<TBuild> GetBuild(const std::string& buildName);
+
+    TBuilds GetBuilds();
+
+    bool CreateTask(const std::string& taskId);
+
+    void UploadTests(
+        std::vector<std::string>&& tests,
+        const std::string& testSuffix,
+        const std::string& taskId
+    );
+
+    void UploadTaskBatches(
+        std::vector<std::vector<uint64_t>>&& batches,
+        const std::string& taskId,
+        size_t batchSize
+    );
+
+    std::optional<std::string> GetTest(
+        const std::string& taskId,
+        const std::string& testIndex,
+        const std::string& testSuffix
+    );
+
+    std::optional<std::string> GetTaskMeta(const std::string& taskId);
 
 private:
-    class TImpl;
-
+    bool UpdateScriptContent(const std::string& buildName, const std::string& scriptName, std::string content);
 private:
-    std::shared_ptr<TImpl> pImpl_;
+    TStorageClientImpl impl_;
 };
 
 } // end of NDTS::NTabasco namespace

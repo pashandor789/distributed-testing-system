@@ -22,6 +22,5 @@ target_link_libraries(
     grpc_tabasco
     tabasco_common_proto
     tabasco_grpc_proto
-    build_data_base
     tabasco_storage_client
 )

@@ -1,13 +1,5 @@
 #file: noinspection YAMLSchemaValidation
 services:
-    build_data_base:
-        healthcheck:
-            test: ["CMD-SHELL", "pg_isready", "-d", "$${POSTGRES_DB}", "-U", "$${POSTGRES_USER}"]
-        build:
-            context: ./
-            dockerfile: task_batcher_storage_coordinator/common/build_data_base/Dockerfile
-        ports:
-            - 5432:5432
     storage:
         image: mongo
         container_name: storage
@@ -20,8 +12,6 @@ services:
         depends_on:
             storage:
                 condition: service_started
-            build_data_base:
-                condition: service_healthy
         ports:
             - 8080:8080
     grpc_tabasco:
@@ -31,8 +21,6 @@ services:
         depends_on:
             storage:
                 condition: service_started
-            build_data_base:
-                condition: service_healthy
         ports:
             - 9090:9090
     broker:
