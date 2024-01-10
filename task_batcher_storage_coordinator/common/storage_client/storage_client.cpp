@@ -31,7 +31,7 @@ bool TStorageClient::UpdateScriptContent(
     }
 
     data[scriptName] = std::move(content);
-    return impl_.UpsertData("builds", buildName, data.dump());
+    return impl_.UpdateData("builds", buildName, data.dump());
 }
 
 bool TStorageClient::UploadInitScript(const std::string& buildName, std::string content) {

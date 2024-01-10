@@ -30,9 +30,9 @@ void TUpdateInitScriptHandler::Handle(const crow::request& req, crow::response& 
 
     bool success =
         ctx.server->storageClient_.UploadInitScript(
-        std::move(buildName_),
+        buildName_,
         std::move(content_)
-        );
+    );
 
     if (!success) {
         res.code = 500;

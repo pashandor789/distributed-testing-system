@@ -44,6 +44,7 @@ public:
 
 private:
     bool UpdateScriptContent(const std::string& buildName, const std::string& scriptName, std::string content);
+
 private:
     TStorageClientImpl impl_;
 };

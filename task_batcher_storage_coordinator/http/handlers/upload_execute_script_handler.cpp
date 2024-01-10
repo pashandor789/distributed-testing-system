@@ -30,7 +30,7 @@ void TUpdateExecuteScriptHandler::Handle(const crow::request& req, crow::respons
 
     bool success =
         ctx.server->storageClient_.UploadExecuteScript(
-            std::move(buildName_),
+            buildName_,
             std::move(content_)
         );
 
