@@ -50,5 +50,7 @@ int main(int argc, char** argv) {
         );
     }
 
-    testingProcessors.back().join();
+    for (size_t i = 0; i < config.instance_count(); ++i) {
+        testingProcessors[i].join();
+    }
 }

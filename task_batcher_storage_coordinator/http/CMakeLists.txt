@@ -10,9 +10,8 @@ add_executable(
     main.cpp
     handlers/builds_handler.cpp
     handlers/create_build_handler.cpp
-    handlers/upload_init_script_handler.cpp
-    handlers/upload_execute_script_handler.cpp
     handlers/upload_tests_handler.cpp
+    handlers/update_build_handler.cpp
 )
 
 set(DTS_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../..)

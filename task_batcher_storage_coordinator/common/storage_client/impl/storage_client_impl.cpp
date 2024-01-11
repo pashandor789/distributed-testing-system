@@ -19,7 +19,15 @@ public:
     TImpl(const TStorageClientConfig& config)
         : client_(mongocxx::uri(config.uri()))
         , db_(client_.database(config.dbname()))
-    {}
+    {
+        auto buildsCollection = db_.collection("builds");
+        auto buildsIndexKey = make_document(kvp("fileName", 1));
+
+        mongocxx::options::index indexOptions;
+        indexOptions.unique(true);
+
+        buildsCollection.create_index(buildsIndexKey.view(), indexOptions);
+    }
 
     bool UpsertData(const std::string& bucketName, const std::string& fileName, std::string data) {
         auto collection = db_.collection(bucketName);
@@ -37,8 +45,25 @@ public:
         return collection.update_one(filter.view(), upsertDocument.view(), options).operator bool();
     }
 
+    bool UpdateData(const std::string& bucketName, const std::string& fileName, std::string data) {
+        auto collection = db_.collection(bucketName);
+
+        auto filter = make_document(
+            kvp("fileName", fileName)
+        );
+
+        auto updateDocument = make_document(
+            kvp("$set", make_document(
+                    kvp("data", std::move(data))
+            ))
+        );
+
+        return collection.update_one(filter.view(), updateDocument.view()).operator bool();
+    }
+
     bool InsertData(const std::string& bucketName, const std::string& fileName, std::string data) {
         auto collection = db_.collection(bucketName);
+
         auto insertDocument = make_document(
             kvp("fileName", fileName),
             kvp("data", std::move(data))
@@ -106,6 +131,10 @@ std::optional<std::string> TStorageClientImpl::GetData(const std::string& bucket
 
 std::vector<File> TStorageClientImpl::GetFiles(const std::string& bucketName) {
     return pImpl_->GetFiles(bucketName);
+}
+
+bool TStorageClientImpl::UpdateData(const std::string &bucketName, const std::string &fileName, std::string data) {
+    return pImpl_->UpdateData(bucketName, fileName, std::move(data));
 }
 
 } // end of NDTS::NTabasco namespace

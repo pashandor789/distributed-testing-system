@@ -21,8 +21,10 @@ public:
 
     bool UpsertData(const std::string& bucketName, const std::string& fileName, std::string data);
 
+    bool UpdateData(const std::string &bucketName, const std::string &fileName, std::string data);
+
     bool InsertData(const std::string& bucketName, const std::string& fileName, std::string data);
-    
+
     /* creates entity for storing data */
     bool CreateBucket(const std::string& bucketName);
 

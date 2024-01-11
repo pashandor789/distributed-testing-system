@@ -36,7 +36,7 @@ bool TUploadTestsHandler::Parse(const crow::request& req, crow::response& res) {
     std::vector<bool> initializedInputTests(testCount, false);
     std::vector<bool> initializedOutputTests(testCount, false);
 
-    std::string taskId = "";
+    std::string taskId;
 
     for (auto& part: msg.parts) {
         auto contentDisposition = part.get_header_object("Content-Disposition").params;
@@ -51,7 +51,7 @@ bool TUploadTestsHandler::Parse(const crow::request& req, crow::response& res) {
         }
 
         int testNum = -1;
-        std::string testSuffix = "";
+        std::string testSuffix;
 
         std::stringstream stream(contentDisposition["filename"]);
 
@@ -162,7 +162,6 @@ void TUploadTestsHandler::Handle(const crow::request& req, crow::response& res, 
     auto batches = SplitIntoBatches(inputTests_, outputTests_, ctx.server->batchSize_);
 
     ctx.server->storageClient_.CreateTask(taskId_);
-
 
     ctx.server->storageClient_.UploadTaskBatches(
         std::move(batches),
