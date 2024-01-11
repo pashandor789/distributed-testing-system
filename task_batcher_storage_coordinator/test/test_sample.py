@@ -101,7 +101,7 @@ def create_build(data):
 
 
 class TestHTTPTabasco:
-    def test_create_build(self, build_name, change_this_build_name):
+    def test_create_build_handler(self, build_name, change_this_build_name):
         data = {
             'buildName': build_name,
             'description': 'test description',
