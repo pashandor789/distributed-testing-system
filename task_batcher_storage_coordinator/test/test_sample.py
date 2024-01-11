@@ -26,6 +26,10 @@ def get_request(url, **kwargs):
     return noexcept_request(url, requests.get, **kwargs)
 
 
+def put_request(url, **kwargs):
+    return noexcept_request(url, requests.put, **kwargs)
+
+
 def noexcept_request(url, method, data=None, files=None, json=None):
     response = None
 
@@ -78,6 +82,7 @@ def change_this_build_name():
 def build_name():
     return f'testBuild{random.randint(-1_000_000, 1_000_000)}'
 
+
 init_script = '''mv $1 main.cpp; g++ main.cpp -o executable'''
 execute_script = './executable'
 
@@ -85,13 +90,18 @@ execute_script = './executable'
 def upload_tests(task_id, tests):
     files = copy.deepcopy(tests)
     files['taskId'] = task_id
-    response = post_request(f'{HTTP_TABASCO_URL}/uploadTests', files=files)
+    response = put_request(f'{HTTP_TABASCO_URL}/uploadTests', files=files)
 
     assert response.status_code == 200, f'uploadTest failed: {response.content.decode()}'
 
 
+def create_build(data):
+    response = post_request(f'{HTTP_TABASCO_URL}/createBuild', json=data)
+    assert response.status_code == 200, f'createBuild failed: {response.content.decode()}'
+
+
 class TestHTTPTabasco:
-    def test_create_build(self, build_name):
+    def test_create_build(self, build_name, change_this_build_name):
         data = {
             'buildName': build_name,
             'description': 'test description',
@@ -99,9 +109,7 @@ class TestHTTPTabasco:
             'initScript': init_script
         }
 
-        response = post_request(f'{HTTP_TABASCO_URL}/createBuild', json=data)
-
-        assert response.status_code == 200, f'createBuild failed: {response.content.decode()}'
+        create_build(data)
 
     def test_builds_handler(self):
         response = get_request(f'{HTTP_TABASCO_URL}/builds')
@@ -121,7 +129,7 @@ class TestHTTPTabasco:
         assert filtered_builds[0]['executeScript'] == execute_script
         assert filtered_builds[0]['initScript'] == init_script
 
-    def test_update_init_execute_script_handlers(self, change_this_build_name):
+    def test_update_build_handler(self, change_this_build_name):
         data = {
             'buildName': change_this_build_name,
             'description': 'test description',
@@ -129,44 +137,24 @@ class TestHTTPTabasco:
             'initScript': 'change this'
         }
 
-        response = post_request(f'{HTTP_TABASCO_URL}/createBuild', json=data)
+        create_build(data)
 
-        assert response.status_code == 200, f'createBuild failed: {response.content.decode()}'
+        data['executeScript'] = 'changed'
+        data['initScript'] = 'changed'
 
-        data = {
-            'buildName': change_this_build_name,
-            'content': 'changed'
-        }
-
-        response = post_request(f'{HTTP_TABASCO_URL}/updateInitScript', json=data)
-
-        assert response.status_code == 200, f'updateInitScript failed: {response.content.decode()}'
-
-        data = {
-            'buildName': change_this_build_name,
-            'content': 'changed'
-        }
-
-        response = post_request(f'{HTTP_TABASCO_URL}/updateExecuteScript', json=data)
-
-        assert response.status_code == 200, f'updateExecuteScript failed: {response.content.decode()}'
+        response = put_request(f'{HTTP_TABASCO_URL}/updateBuild', json=data)
+        assert response.status_code == 200, f'updateBuild failed: {response.content.decode()}'
 
         response = get_request(f'{HTTP_TABASCO_URL}/builds')
         builds = json.loads(response.content.decode())["items"]
 
         assert response.status_code == 200, f'builds failed: {response.content.decode()}'
 
-        filter_func = lambda x: (
-                x['executeScript'] == 'changed' and
-                x['initScript'] == 'changed'
-        )
+        filter_func = lambda x: x['executeScript'] == 'changed' and x['initScript'] == 'changed' and x['name'] == change_this_build_name
 
         filtered_builds = list(filter(filter_func, builds))
 
         assert len(filtered_builds) > 0, f'build was not found in {filtered_builds}'
-
-        assert filtered_builds[0]['executeScript'] == 'changed'
-        assert filtered_builds[0]['initScript'] == 'changed'
 
         filter_func = lambda x: (
                 x['executeScript'] == 'change this' and

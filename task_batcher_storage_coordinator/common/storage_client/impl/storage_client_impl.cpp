@@ -20,13 +20,13 @@ public:
         : client_(mongocxx::uri(config.uri()))
         , db_(client_.database(config.dbname()))
     {
-        auto collection = db_.collection("builds");
-        auto indexKeys = make_document(kvp("fileName", 1));
+        auto buildsCollection = db_.collection("builds");
+        auto buildsIndexKey = make_document(kvp("fileName", 1));
 
         mongocxx::options::index indexOptions;
         indexOptions.unique(true);
 
-        collection.create_index(indexKeys.view(), indexOptions);
+        buildsCollection.create_index(buildsIndexKey.view(), indexOptions);
     }
 
     bool UpsertData(const std::string& bucketName, const std::string& fileName, std::string data) {

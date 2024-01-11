@@ -2,9 +2,8 @@
 
 #include "handlers/builds_handler.h"
 #include "handlers/create_build_handler.h"
-#include "handlers/upload_execute_script_handler.h"
-#include "handlers/upload_init_script_handler.h"
 #include "handlers/upload_tests_handler.h"
+#include "handlers/update_build_handler.h"
 
 namespace NDTS::NTabasco {
 
@@ -34,16 +33,12 @@ TTabascoHTTPServer::TTabascoHTTPServer(const TTabascoServerConfig& config)
 }
 
 void TTabascoHTTPServer::InitHandlers() {
-    CROW_ROUTE(app_, "/uploadTests").methods("POST"_method) (
+    CROW_ROUTE(app_, "/uploadTests").methods("PUT"_method) (
         GetHandlerCallback<TUploadTestsHandler>(this)
     );
 
-    CROW_ROUTE(app_, "/updateInitScript").methods("POST"_method) (
-        GetHandlerCallback<TUpdateInitScriptHandler>(this)
-    );
-
-    CROW_ROUTE(app_, "/updateExecuteScript").methods("POST"_method) (
-        GetHandlerCallback<TUpdateExecuteScriptHandler>(this)
+    CROW_ROUTE(app_, "/updateBuild").methods("PUT"_method) (
+        GetHandlerCallback<TUpdateBuildHandler>(this)
     );
 
     CROW_ROUTE(app_, "/createBuild").methods("POST"_method) (

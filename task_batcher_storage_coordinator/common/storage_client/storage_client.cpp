@@ -13,33 +13,11 @@ bool TStorageClient::CreateBuild(TBuild build) {
     return impl_.InsertData("builds", buildName, std::move(deserializedBuildData));
 }
 
-bool TStorageClient::UpdateScriptContent(
-    const std::string& buildName,
-    const std::string& scriptName,
-    std::string content
-) {
-    auto maybeData = impl_.GetData("builds", buildName);
+bool TStorageClient::UpdateBuild(TBuild build) {
+    auto buildName = build.name;
+    auto deserializedBuildData = build.MoveToJSON().dump();
 
-    if (!maybeData.has_value()) {
-        return false;
-    }
-
-    auto data = nlohmann::json::parse(std::move(maybeData.value()), nullptr, false);
-
-    if (data.is_discarded() || !data.contains(scriptName)) {
-        return false;
-    }
-
-    data[scriptName] = std::move(content);
-    return impl_.UpdateData("builds", buildName, data.dump());
-}
-
-bool TStorageClient::UploadInitScript(const std::string& buildName, std::string content) {
-    return UpdateScriptContent(buildName, "initScript", std::move(content));
-}
-
-bool TStorageClient::UploadExecuteScript(const std::string& buildName, std::string content) {
-    return UpdateScriptContent(buildName, "executeScript", std::move(content));
+    return impl_.UpdateData("builds", buildName, std::move(deserializedBuildData));
 }
 
 std::optional<TBuild> TStorageClient::GetBuild(const std::string& buildName) {

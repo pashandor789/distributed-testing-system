@@ -10,11 +10,9 @@ class TStorageClient {
 public:
     TStorageClient(const TStorageClientConfig& config);
 
-    bool UploadInitScript(const std::string& buildName, std::string content);
-
-    bool UploadExecuteScript(const std::string& buildName, std::string content);
-
     bool CreateBuild(TBuild build);
+
+    bool UpdateBuild(TBuild build);
 
     std::optional<TBuild> GetBuild(const std::string& buildName);
 
@@ -41,9 +39,6 @@ public:
     );
 
     std::optional<std::string> GetTaskMeta(const std::string& taskId);
-
-private:
-    bool UpdateScriptContent(const std::string& buildName, const std::string& scriptName, std::string content);
 
 private:
     TStorageClientImpl impl_;
