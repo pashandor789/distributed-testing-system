@@ -47,21 +47,21 @@ grpc::Status TTabascoGRPCServiceImpl::GetScripts(grpc::ServerContext* context, c
 
     TBuild build = std::move(maybeBuild.value()) ;
 
-    auto maybeData = storageClient_.GetTaskMeta(taskId);
+    if (auto maybeData = storageClient_.GetTaskMeta(taskId)) {
+        auto data = std::move(maybeData.value());
 
-    if (!maybeData.has_value()) {
-        return {grpc::StatusCode::NOT_FOUND, "meta.json wasn't found"};
+        nlohmann::json metaData = nlohmann::json::parse(std::move(data), nullptr, false);
+
+        size_t batchCount = metaData["batches"].size();
+        reply->set_batch_count(batchCount);
     }
-
-    auto data = std::move(maybeData.value());
-
-    nlohmann::json metaData = nlohmann::json::parse(std::move(data), nullptr, false);
-
-    size_t batchCount = metaData["batches"].size();
-    reply->set_batch_count(batchCount);
     
     reply->set_init_script(std::move(build.initScript));
     reply->set_execute_script(std::move(build.executeScript));
+
+    if (auto maybeRootDir = storageClient_.GetTaskRootDir(taskId)) {
+        reply->set_task_root_dir(std::move(maybeRootDir.value()));
+    }
 
     return grpc::Status::OK;
 }

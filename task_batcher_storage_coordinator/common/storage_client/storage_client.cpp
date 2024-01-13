@@ -52,6 +52,10 @@ bool TStorageClient::UploadTests(
     return true;
 }
 
+bool TStorageClient::UploadTaskRootDir(const std::string& taskId, std::string zipData) {
+    return impl_.UpsertData(taskId, "root_dir.zip", std::move(zipData));
+}
+
 bool TStorageClient::UploadTaskBatches(
     std::vector<std::vector<uint64_t>>&& batches,
     const std::string& taskId,
@@ -88,6 +92,22 @@ std::optional<std::string> TStorageClient::GetTest(
 
 std::optional<std::string> TStorageClient::GetTaskMeta(const std::string& taskId) {
     return impl_.GetData(taskId, "meta.json");
+}
+
+bool TStorageClient::CreateChecker(const std::string& checkerName, std::string checkerData) {
+    return impl_.InsertData("checkers", checkerName, std::move(checkerData));
+}
+
+bool TStorageClient::UpdateChecker(const std::string& checkerName, std::string checkerData) {
+    return impl_.UpsertData("checkers", checkerName, std::move(checkerData));
+}
+
+std::optional<std::string> TStorageClient::GetCheckerData(const std::string& checkerName) {
+    return  impl_.GetData("checkers", checkerName);
+}
+
+std::optional<std::string> TStorageClient::GetTaskRootDir(const std::string &taskId) {
+    return impl_.GetData(taskId, "root_dir.zip");
 }
 
 } // end of NDTS::NTabasco namespace

@@ -15,13 +15,19 @@ struct File {
     std::string content;
 };
 
+/*
+    TODO:
+        1) Create operations with JSON (update / insert / get)
+        2) Create operations with binary data (update / insert / get)
+*/
+
 class TStorageClientImpl {
 public:
     TStorageClientImpl(const TStorageClientConfig& config);
 
     bool UpsertData(const std::string& bucketName, const std::string& fileName, std::string data);
 
-    bool UpdateData(const std::string &bucketName, const std::string &fileName, std::string data);
+    bool UpdateData(const std::string &bucketName, const std::string& fileName, std::string data);
 
     bool InsertData(const std::string& bucketName, const std::string& fileName, std::string data);
 

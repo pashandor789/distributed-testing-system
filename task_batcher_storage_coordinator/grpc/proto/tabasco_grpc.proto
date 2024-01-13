@@ -26,4 +26,5 @@ message TGetScriptsResponse {
     string init_script = 1;
     string execute_script = 2;
     uint64 batch_count = 3;
+    bytes task_root_dir = 4;
 }

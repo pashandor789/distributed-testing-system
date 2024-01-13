@@ -10,7 +10,8 @@ enum class TVerdict {
     TL = 2,
     ML = 3,
     RE = 4,
-    CRASH = 5
+    CE = 5,
+    CRASH = 6
 };
 
 struct TTestingReport {

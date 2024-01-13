@@ -14,7 +14,7 @@ import requests
 
 import pytest
 
-HTTP_TABASCO_URL = 'http://http_tabasco:8080'
+HTTP_TABASCO_URL = 'http://localhost:8080'
 GRPC_TABASCO_URL = 'grpc_tabasco:9090'
 
 
@@ -80,7 +80,7 @@ def change_this_build_name():
 
 @pytest.fixture(scope="module")
 def build_name():
-    return f'testBuild{random.randint(-1_000_000, 1_000_000)}'
+    return f'testBuild'
 
 
 init_script = '''mv $1 main.cpp; g++ main.cpp -o executable'''
@@ -171,6 +171,11 @@ class TestHTTPTabasco:
     def test_upload_tests_handler_big_tests(self, uploaded_test_big_string):
         upload_tests(task_id=1, tests=uploaded_test_big_string)
 
+    def test_upload_task_root_dir_handler(self):
+        files = {'root_dir.zip': open('data/test_cmake.zip', 'rb'), 'data.json': json.dumps({'taskId': '2'})}
+        response = put_request(f'{HTTP_TABASCO_URL}/uploadTaskRootDir', files=files)
+
+        assert response.status_code == 200, f'uploadTaskRootDir failed: {response.content.decode()}'
 
 def get_grpc_tabasco_stub():
     channel = grpc.insecure_channel(
@@ -222,38 +227,59 @@ class TestGRPCTabasco:
     def test_get_script_and_get_batch_big_tests(self, uploaded_test_big_string, build_name):
         get_script_and_get_batch(1, uploaded_test_big_string, build_name)
 
-# import pika
-#
-#
-# def get_broker_channel():
-#     connection = pika.BlockingConnection(pika.ConnectionParameters('broker'))
-#     channel = connection.channel()
-#     channel.queue_declare(queue='test')
-#     return channel
-#
-#
-# user_data_a_plus_b = '''
-# #include <iostream>
-#
-# int main() {
-#     int a, b;
-#     std::cin >> a >> b;
-#     std::cout << a + b;
-# }
-# '''
-#
-#
-# class TestTestingProcessor:
-#     def test_submit_small_test(self):
-#         channel = get_broker_channel()
-#
-#         json_message = {
-#             "submissionId": 0,
-#             "buildId": 1,
-#             "userData": user_data_a_plus_b,
-#             "taskId": 0,
-#             "memoryLimit": 10241024,
-#             "cpuTimeLimitMilliSeconds": 2000
-#         }
-#
-#         channel
+import pika
+
+
+def get_broker_channel():
+    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    channel = connection.channel()
+    channel.queue_declare(queue='test')
+    return channel
+
+
+foo_solution = '''
+void Foo() { std::cout << " hello, world ! " << std::endl; }
+'''
+
+init_scriptik = '''
+mv $1 foo.cpp
+
+mkdir build
+cd build
+cmake ..
+cmake --build .
+'''
+
+execute_scriptik = '''
+./build/test
+'''
+
+class TestTestingProcessor:
+    def test_submit_small_test(self):
+        channel = get_broker_channel()
+
+        data = {
+            'buildName': 'cmake build',
+            'description': 'test description',
+            'executeScript': execute_scriptik,
+            'initScript': init_scriptik
+        }
+
+        create_build(data)
+
+        json_message = {
+            "submissionId": 0,
+            "buildName": "cmake build",
+            "userData": foo_solution,
+            "taskId": 2,
+            "memoryLimit": 10241024,
+            "cpuTimeLimitMilliSeconds": 2000
+        }
+
+
+        channel.basic_publish(
+            exchange='',
+            routing_key='test',
+            body=json.dumps(json_message)
+        )
+

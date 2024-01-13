@@ -36,7 +36,7 @@ public:
 
     void MoveFileInside(const fs::path& outsidePath, const fs::path& insidePath);
 
-    void CreateFile(const fs::path& path, std::string content);
+    void CreateFile(const fs::path& path, const std::string& content);
 
     void Kill();
 

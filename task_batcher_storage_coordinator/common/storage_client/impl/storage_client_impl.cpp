@@ -54,7 +54,7 @@ public:
 
         auto updateDocument = make_document(
             kvp("$set", make_document(
-                    kvp("data", std::move(data))
+                kvp("data", std::move(data))
             ))
         );
 

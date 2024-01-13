@@ -1,6 +1,8 @@
 #file: noinspection YAMLSchemaValidation
 services:
     storage:
+        healthcheck:
+            test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
         image: mongo
         container_name: storage
         ports:
@@ -11,7 +13,7 @@ services:
             dockerfile: ./task_batcher_storage_coordinator/http/Dockerfile
         depends_on:
             storage:
-                condition: service_started
+                condition: service_healthy
         ports:
             - 8080:8080
     grpc_tabasco:
@@ -20,7 +22,7 @@ services:
             dockerfile: ./task_batcher_storage_coordinator/grpc/Dockerfile
         depends_on:
             storage:
-                condition: service_started
+                condition: service_healthy
         ports:
             - 9090:9090
     broker:

@@ -18,7 +18,7 @@ TExecVArgs GetExecCommandArgs(
     std::vector<std::string> dockerCommand = {"/usr/bin/docker", "exec", "-i"};
 
     if (workingDir.has_value()) {
-        dockerCommand.push_back("-w");
+        dockerCommand.emplace_back("-w");
         dockerCommand.push_back(workingDir.value());
     }
 
@@ -56,7 +56,7 @@ void TDockerContainer::Run() {
 
     std::string containerId;
     for (auto ch = fgetc(dockerOut); ch != EOF && ch != '\n'; ch = fgetc(dockerOut)) {
-        containerId.push_back(ch);
+        containerId.push_back(static_cast<char>(ch));
     }
 
     containerId_ = std::move(containerId);
@@ -104,13 +104,13 @@ int TDockerContainer::ExecBash(
 }
 
 void TDockerContainer::Kill() {
-    std::string command = "/usr/bin/docker stop -s SIGKILL";
-
-    command
-        .append(" ")
-        .append(containerId_);
-
-    std::system(command.c_str());
+//    std::string command = "/usr/bin/docker stop -s SIGKILL";
+//
+//    command
+//        .append(" ")
+//        .append(containerId_);
+//
+//    std::system(command.c_str());
 }
 
 void TDockerContainer::MoveFileInside(const fs::path& outsidePath, const fs::path& containerPath) {
@@ -128,16 +128,16 @@ void TDockerContainer::MoveFileInside(const fs::path& outsidePath, const fs::pat
 }
 
 void TDockerContainer::Remove() {
-    std::string command = "/usr/bin/docker rm";
-
-    command
-        .append(" ")
-        .append(containerId_);
-
-    std::system(command.c_str());
+//    std::string command = "/usr/bin/docker rm";
+//
+//    command
+//        .append(" ")
+//        .append(containerId_);
+//
+//    std::system(command.c_str());
 }
 
-void TDockerContainer::CreateFile(const fs::path& path, std::string content) {
+void TDockerContainer::CreateFile(const fs::path& path, const std::string& content) {
     std::string echoCommand;
 
     echoCommand
