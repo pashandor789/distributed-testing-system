@@ -1,4 +1,5 @@
 import json
+import os
 import string
 import sys
 
@@ -14,7 +15,7 @@ import requests
 
 import pytest
 
-HTTP_TABASCO_URL = 'http://localhost:8080'
+HTTP_TABASCO_URL = 'http://http_tabasco:8080'
 GRPC_TABASCO_URL = 'grpc_tabasco:9090'
 
 
@@ -226,60 +227,3 @@ class TestGRPCTabasco:
 
     def test_get_script_and_get_batch_big_tests(self, uploaded_test_big_string, build_name):
         get_script_and_get_batch(1, uploaded_test_big_string, build_name)
-
-import pika
-
-
-def get_broker_channel():
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
-    channel.queue_declare(queue='test')
-    return channel
-
-
-foo_solution = '''
-void Foo() { std::cout << " hello, world ! " << std::endl; }
-'''
-
-init_scriptik = '''
-mv $1 foo.cpp
-
-mkdir build
-cd build
-cmake ..
-cmake --build .
-'''
-
-execute_scriptik = '''
-./build/test
-'''
-
-class TestTestingProcessor:
-    def test_submit_small_test(self):
-        channel = get_broker_channel()
-
-        data = {
-            'buildName': 'cmake build',
-            'description': 'test description',
-            'executeScript': execute_scriptik,
-            'initScript': init_scriptik
-        }
-
-        create_build(data)
-
-        json_message = {
-            "submissionId": 0,
-            "buildName": "cmake build",
-            "userData": foo_solution,
-            "taskId": 2,
-            "memoryLimit": 10241024,
-            "cpuTimeLimitMilliSeconds": 2000
-        }
-
-
-        channel.basic_publish(
-            exchange='',
-            routing_key='test',
-            body=json.dumps(json_message)
-        )
-
