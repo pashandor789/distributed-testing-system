@@ -2,6 +2,7 @@
 
 #include "handlers/builds_handler.h"
 #include "handlers/create_build_handler.h"
+#include "handlers/upload_task_root_dir.h"
 #include "handlers/upload_tests_handler.h"
 #include "handlers/update_build_handler.h"
 
@@ -35,6 +36,10 @@ TTabascoHTTPServer::TTabascoHTTPServer(const TTabascoServerConfig& config)
 void TTabascoHTTPServer::InitHandlers() {
     CROW_ROUTE(app_, "/uploadTests").methods("PUT"_method) (
         GetHandlerCallback<TUploadTestsHandler>(this)
+    );
+
+    CROW_ROUTE(app_, "/uploadTaskRootDir").methods("PUT"_method) (
+        GetHandlerCallback<TUploadTaskRootDirHandler>(this)
     );
 
     CROW_ROUTE(app_, "/updateBuild").methods("PUT"_method) (

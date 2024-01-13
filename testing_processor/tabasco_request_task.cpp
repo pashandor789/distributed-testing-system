@@ -26,7 +26,8 @@ TExpected<TGetScriptsResponse, TErrorResponse> TTabascoRequestTask::GetScripts(u
     return TGetScriptsResponse{
         .initScript = std::move(*response.mutable_init_script()),
         .executeScript = std::move(*response.mutable_execute_script()),
-        .batchCount = response.batch_count()
+        .batchCount = response.batch_count(),
+        .rootDir = std::move(*response.mutable_task_root_dir())
     };
 }
 

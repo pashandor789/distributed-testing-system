@@ -13,6 +13,24 @@ namespace NDTS::NTestingProcessor {
 
 namespace fs = std::filesystem;
 
+void DumpFile(
+    const fs::path& filePath,
+    const std::string& content
+) {
+    std::ofstream stream(filePath);
+    stream << content;
+}
+
+void DumpTests(
+    const fs::path& inputTestPath,
+    const std::string& inputTest,
+    const fs::path& outputTestPath,
+    const std::string& outputTest
+) {
+    DumpFile(inputTestPath, inputTest);
+    DumpFile(outputTestPath, outputTest);
+}
+
 static const fs::path USER_ROOT_PATH = "/check";
 static const fs::path INIT_SCRIPT_FILE = "init.sh";
 static const fs::path INIT_SCRIPT_PATH = USER_ROOT_PATH / INIT_SCRIPT_FILE;
@@ -60,13 +78,20 @@ bool TTestingProcessor::Prepare(TTestingProcessorRequest& request) {
         return false;
     }
 
-    TGetScriptsResponse scripts = std::move(getScriptsResponse.Value());
+    TGetScriptsResponse response = std::move(getScriptsResponse.Value());
 
-    container_.CreateFile(INIT_SCRIPT_PATH, std::move(scripts.initScript));
+    if (!response.rootDir.empty()) {
+        auto localRootDirPath = localStoragePath_ / "root_dir.zip";
+        DumpFile(localRootDirPath, response.rootDir);
+        container_.MoveFileInside(localRootDirPath, USER_ROOT_PATH);
+        container_.Exec({"unzip", "root_dir.zip"}, {.workingDir = USER_ROOT_PATH});
+    }
+
+    container_.CreateFile(INIT_SCRIPT_PATH, response.initScript);
     container_.Exec({"chmod", "+x", INIT_SCRIPT_PATH});
 
-    container_.CreateFile(USER_DATA_PATH, std::move(request.userData));
-    request.batchCount = scripts.batchCount;
+    container_.CreateFile(USER_DATA_PATH, request.userData);
+    request.batchCount = response.batchCount;
 
     int exitCode = container_.ExecBash(
         {INIT_SCRIPT_FILE, USER_DATA_PATH},
@@ -77,8 +102,9 @@ bool TTestingProcessor::Prepare(TTestingProcessorRequest& request) {
         return false;
     }
 
-    container_.CreateFile(EXECUTE_SCRIPT_PATH, std::move(scripts.executeScript));
+    container_.CreateFile(EXECUTE_SCRIPT_PATH, response.executeScript);
     container_.Exec({"chmod", "+x", EXECUTE_SCRIPT_PATH});
+
     return true;
 }
 
@@ -97,7 +123,7 @@ TVerdict CheckOutput(
         .append(" ")
         .append(outputTestPath);
 
-    int checkerExitCode = system(checkerLauncherCommand.c_str());
+    int checkerExitCode = WEXITSTATUS(system(checkerLauncherCommand.c_str()));
 
     if (checkerExitCode == 0) {
         return TVerdict::OK;
@@ -107,20 +133,9 @@ TVerdict CheckOutput(
         return TVerdict::WA;
     }
 
+    std::cout << checkerExitCode << std::endl;
+
     return TVerdict::CRASH;
-}
-
-void DumpTests(
-    const fs::path& inputTestPath,
-    const std::string& inputTest,
-    const fs::path& outputTestPath,
-    const std::string& outputTest
-) {
-    std::ofstream inputTestFile(inputTestPath);
-    inputTestFile << inputTest;
-
-    std::ofstream outputTestFile(outputTestPath);
-    outputTestFile << outputTest;
 }
 
 std::string FetchFileContent(const fs::path& filePath) {
@@ -145,6 +160,10 @@ std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& re
 
     std::vector<TTestingReport> report;
 
+    if (request.batchCount == 0) {
+        return { ExecuteAndTest(request, "", "") };
+    }
+
     for (size_t batchIndex = 0; batchIndex < request.batchCount; ++batchIndex) {
         auto getBatchResponse = tabascoRequestTask.GetBatch(request.taskId, batchIndex);
 
@@ -158,47 +177,11 @@ std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& re
         size_t testsSize = tests.inputTests.size();
 
         for (size_t i = 0; i < testsSize; ++i) {
-            fs::path inputTestPath = localStoragePath_ / "input.txt";
-            fs::path outputTestPath = localStoragePath_ / "output.txt";
-            fs::path userOutputPath = localStoragePath_ / "userOutput.txt";
-
-            DumpTests(inputTestPath, tests.inputTests[i], outputTestPath, tests.outputTests[i]);
-
-            std::string cpuTLMS = std::to_string(request.cpuTimeLimitMilliSeconds);
-            container_.Exec(
-                {EXECUTOR_SCRIPT_PATH, "--execute", EXECUTE_SCRIPT_PATH, "--cpu-time-limit", std::move(cpuTLMS)},
-                {.stdIn = inputTestPath, .stdOut = userOutputPath, .workingDir = USER_ROOT_PATH}
+            report.push_back(
+                ExecuteAndTest(request, tests.inputTests[i], tests.outputTests[i])
             );
 
-            container_.Exec({"cat", "report.json"}, {.stdOut = localStoragePath_ / "report.json", .workingDir = USER_ROOT_PATH});
-
-            std::string deserializedReport = FetchFileContent(localStoragePath_ / "report.json");
-            nlohmann::json executeReport = nlohmann::json::parse(deserializedReport, nullptr, false);
-
-            report.emplace_back(
-                static_cast<uint64_t>(executeReport["cpuTimeElapsedMicroSeconds"]) / 1'000,
-                executeReport["memorySpent"]
-            );
-
-            if (executeReport["exitCode"] != 0) {
-                report.back().verdict = TVerdict::RE;
-                return report;
-            }
-
-            if (executeReport["cpuTimeElapsedMicroSeconds"] > request.cpuTimeLimitMilliSeconds * 1'000) {
-                report.back().verdict = TVerdict::TL;
-                return report;
-            }
-
-            if (executeReport["memorySpent"] > request.memoryLimit) {
-                report.back().verdict = TVerdict::ML;
-                return report; 
-            }
-
-            TVerdict checkerVerdict = CheckOutput(CHECKER_PATH, outputTestPath, userOutputPath, inputTestPath);
-
-            if (checkerVerdict != TVerdict::OK) {
-                report.back().verdict = checkerVerdict;
+            if (report.back().verdict != TVerdict::OK) {
                 return report;
             }
         }
@@ -207,15 +190,66 @@ std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& re
     return report;
 }
 
+TTestingReport TTestingProcessor::ExecuteAndTest(
+    TTestingProcessorRequest& request,
+    const std::string& inputTest,
+    const std::string& outputTest
+) {
+    fs::path inputTestPath = localStoragePath_ / "input.txt";
+    fs::path outputTestPath = localStoragePath_ / "output.txt";
+    fs::path userOutputPath = localStoragePath_ / "userOutput.txt";
+
+    DumpTests(inputTestPath, inputTest, outputTestPath, outputTest);
+
+    std::string cpuTLMS = std::to_string(request.cpuTimeLimitMilliSeconds);
+    container_.Exec(
+            {EXECUTOR_SCRIPT_PATH, "--execute", EXECUTE_SCRIPT_PATH, "--cpu-time-limit", std::move(cpuTLMS)},
+            {.stdIn = inputTestPath, .stdOut = userOutputPath, .workingDir = USER_ROOT_PATH}
+    );
+
+    container_.Exec({"cat", "report.json"}, {.stdOut = localStoragePath_ / "report.json", .workingDir = USER_ROOT_PATH});
+
+    std::string deserializedReport = FetchFileContent(localStoragePath_ / "report.json");
+    nlohmann::json executeReport = nlohmann::json::parse(deserializedReport, nullptr, false);
+
+    TTestingReport report(
+        static_cast<uint64_t>(executeReport["cpuTimeElapsedMicroSeconds"]) / 1'000,
+        executeReport["memorySpent"]
+    );
+
+    if (executeReport["exitCode"] != 0) {
+        report.verdict = TVerdict::RE;
+        return report;
+    }
+
+    if (executeReport["cpuTimeElapsedMicroSeconds"] > request.cpuTimeLimitMilliSeconds * 1'000) {
+        report.verdict = TVerdict::TL;
+        return report;
+    }
+
+    if (executeReport["memorySpent"] > request.memoryLimit) {
+        report.verdict = TVerdict::ML;
+        return report;
+    }
+
+    TVerdict checkerVerdict = CheckOutput(CHECKER_PATH, outputTestPath, userOutputPath, inputTestPath);
+
+    if (checkerVerdict != TVerdict::OK) {
+        report.verdict = checkerVerdict;
+        return report;
+    }
+
+    return report;
+}
+
+
 void TTestingProcessor::Commit(TTestingProcessorRequest& request, std::vector<TTestingReport>&& report) {
     TCommitServiceRequest commitServiceRequest(commitServiceURL_);
     auto err = commitServiceRequest.Commit(request.submissionId, report);
 
     if (err.has_value()) {
         nlohmann::json kek;
-
         kek["items"] = ToJSON(report);
-
         std::cerr << kek.dump() << std::endl;
         LOG(ERROR) << "CommitService failed: " << err.value() << " for submission: " << request.submissionId;
     }

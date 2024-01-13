@@ -12,6 +12,10 @@ std::string GetStringRepr(TVerdict verdict) {
             return "TL";
         case TVerdict::ML:
             return "ML";
+        case TVerdict::RE:
+            return "RE";
+        case TVerdict::CE:
+            return "CE";
         case TVerdict::CRASH:
             return "CRASH";
         default:

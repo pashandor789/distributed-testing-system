@@ -14,6 +14,7 @@ struct TGetScriptsResponse {
     std::string initScript;
     std::string executeScript;
     uint64_t batchCount;
+    std::string rootDir;
 };
 
 struct TGetBatchResponse {

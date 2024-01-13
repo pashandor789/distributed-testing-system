@@ -26,6 +26,12 @@ private:
 
     void Commit(TTestingProcessorRequest& request, std::vector<TTestingReport>&& report);
 
+    TTestingReport ExecuteAndTest(
+        TTestingProcessorRequest& request,
+        const std::string& inputTest,
+        const std::string& outputTest
+    );
+
 private:
     TDockerContainer container_;
     std::shared_ptr<NTabasco::TTabascoGRPC::Stub> tabasco_;

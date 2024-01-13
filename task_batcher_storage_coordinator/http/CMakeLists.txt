@@ -11,6 +11,7 @@ add_executable(
     handlers/builds_handler.cpp
     handlers/create_build_handler.cpp
     handlers/upload_tests_handler.cpp
+    handlers/upload_task_root_dir.cpp
     handlers/update_build_handler.cpp
 )
 

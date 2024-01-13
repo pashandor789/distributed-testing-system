@@ -32,13 +32,23 @@ public:
         size_t batchSize
     );
 
+    bool UploadTaskRootDir(const std::string& taskId, std::string zipData);
+
     std::optional<std::string> GetTest(
         const std::string& taskId,
         const std::string& testIndex,
         const std::string& testSuffix
     );
 
+    bool CreateChecker(const std::string& checkerName, std::string checkerData);
+
+    bool UpdateChecker(const std::string& checkerName, std::string checkerData);
+
     std::optional<std::string> GetTaskMeta(const std::string& taskId);
+
+    std::optional<std::string> GetCheckerData(const std::string& checkerName);
+
+    std::optional<std::string> GetTaskRootDir(const std::string& taskId);
 
 private:
     TStorageClientImpl impl_;
