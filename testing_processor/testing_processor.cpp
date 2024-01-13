@@ -13,6 +13,24 @@ namespace NDTS::NTestingProcessor {
 
 namespace fs = std::filesystem;
 
+void DumpFile(
+    const fs::path& filePath,
+    const std::string& content
+) {
+    std::ofstream stream(filePath);
+    stream << content;
+}
+
+void DumpTests(
+    const fs::path& inputTestPath,
+    const std::string& inputTest,
+    const fs::path& outputTestPath,
+    const std::string& outputTest
+) {
+    DumpFile(inputTestPath, inputTest);
+    DumpFile(outputTestPath, outputTest);
+}
+
 static const fs::path USER_ROOT_PATH = "/check";
 static const fs::path INIT_SCRIPT_FILE = "init.sh";
 static const fs::path INIT_SCRIPT_PATH = USER_ROOT_PATH / INIT_SCRIPT_FILE;
@@ -62,6 +80,13 @@ bool TTestingProcessor::Prepare(TTestingProcessorRequest& request) {
 
     TGetScriptsResponse response = std::move(getScriptsResponse.Value());
 
+    if (!response.rootDir.empty()) {
+        auto localRootDirPath = localStoragePath_ / "root_dir.zip";
+        DumpFile(localRootDirPath, response.rootDir);
+        container_.MoveFileInside(localRootDirPath, USER_ROOT_PATH);
+        container_.Exec({"unzip", "root_dir.zip"}, {.workingDir = USER_ROOT_PATH});
+    }
+
     container_.CreateFile(INIT_SCRIPT_PATH, response.initScript);
     container_.Exec({"chmod", "+x", INIT_SCRIPT_PATH});
 
@@ -79,11 +104,6 @@ bool TTestingProcessor::Prepare(TTestingProcessorRequest& request) {
 
     container_.CreateFile(EXECUTE_SCRIPT_PATH, response.executeScript);
     container_.Exec({"chmod", "+x", EXECUTE_SCRIPT_PATH});
-
-    if (!response.rootDir.empty()) {
-        container_.CreateFile(USER_ROOT_PATH / "root_dir.zip", response.rootDir);
-        container_.Exec({"unzip", "root_dir.zip"}, {.workingDir = USER_ROOT_PATH});
-    }
 
     return true;
 }
@@ -103,7 +123,7 @@ TVerdict CheckOutput(
         .append(" ")
         .append(outputTestPath);
 
-    int checkerExitCode = system(checkerLauncherCommand.c_str());
+    int checkerExitCode = WEXITSTATUS(system(checkerLauncherCommand.c_str()));
 
     if (checkerExitCode == 0) {
         return TVerdict::OK;
@@ -113,20 +133,9 @@ TVerdict CheckOutput(
         return TVerdict::WA;
     }
 
+    std::cout << checkerExitCode << std::endl;
+
     return TVerdict::CRASH;
-}
-
-void DumpTests(
-    const fs::path& inputTestPath,
-    const std::string& inputTest,
-    const fs::path& outputTestPath,
-    const std::string& outputTest
-) {
-    std::ofstream inputTestFile(inputTestPath);
-    inputTestFile << inputTest;
-
-    std::ofstream outputTestFile(outputTestPath);
-    outputTestFile << outputTest;
 }
 
 std::string FetchFileContent(const fs::path& filePath) {
