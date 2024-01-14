@@ -12,9 +12,9 @@ namespace NDTS::NTestingProcessor {
 namespace fs = std::filesystem;
 
 struct TDockerExecOptions {
-    std::optional<fs::path> stdIn = std::nullopt;
-    std::optional<fs::path> stdOut = std::nullopt;
-    std::optional<fs::path> workingDir = std::nullopt;
+    std::optional<fs::path> stdIn = std::nullopt; // from host to container
+    std::optional<fs::path> stdOut = std::nullopt; // from container to host
+    std::optional<fs::path> workingDir = std::nullopt; // inside container
 };
 
 class TDockerContainer {
