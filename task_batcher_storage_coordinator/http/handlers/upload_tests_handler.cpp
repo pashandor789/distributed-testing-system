@@ -171,13 +171,7 @@ void TUploadTestsHandler::Handle(const crow::request& req, crow::response& res, 
 
     ctx.server->storageClient_.UploadTests(
         std::move(inputTests_),
-        INPUT_TEST_SUFFIX,
-        taskId_
-    );
-
-    ctx.server->storageClient_.UploadTests(
         std::move(outputTests_),
-        OUTPUT_TEST_SUFFIX,
         taskId_
     );
 }

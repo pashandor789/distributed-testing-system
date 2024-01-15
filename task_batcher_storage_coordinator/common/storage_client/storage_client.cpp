@@ -37,14 +37,22 @@ bool TStorageClient::CreateTask(const std::string& taskId) {
 }
 
 bool TStorageClient::UploadTests(
-    std::vector<std::string>&& tests,
-    const std::string& testSuffix,
+    std::vector<std::string>&& inputTests,
+    std::vector<std::string>&& outputTests,
     const std::string& taskId
 ) {
-    for (size_t i = 0; i < tests.size(); ++i) {
-        std::string fileName = std::to_string(i + 1) + "_" + testSuffix;
+    size_t size = inputTests.size();
 
-        if (!impl_.UpsertData(taskId, fileName, std::move(tests[i]))) {
+    for (size_t i = 0; i < size; ++i) {
+        std::string inputTestFileName = std::to_string(i + 1) + "_input";
+
+        if (!impl_.UpsertData(taskId, inputTestFileName, std::move(inputTests[i]))) {
+            return false;
+        }
+
+        std::string outputTestFileName = std::to_string(i + 1) + "_output";
+
+        if (!impl_.UpsertData(taskId, outputTestFileName, std::move(outputTests[i]))) {
             return false;
         }
     }

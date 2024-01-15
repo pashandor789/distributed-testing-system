@@ -51,15 +51,15 @@ TBuild TBuild::FromJSON(nlohmann::json data) {
 
 nlohmann::json TBuilds::MoveToJSON() {
     nlohmann::json data;
-    data["items"] = MoveToJSONVector(std::move(items));
+    data["builds"] = MoveToJSONVector(std::move(items));
     return data;
 }
 
 TBuilds TBuilds::FromJSON(nlohmann::json data) {
     TBuilds builds;
-    builds.items.reserve(data["items"].size());
+    builds.items.reserve(data["builds"].size());
 
-    for (auto& item: data["items"]) {
+    for (auto& item: data["builds"]) {
         builds.items.push_back(TBuild::FromJSON(item));
     }
 
