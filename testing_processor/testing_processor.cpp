@@ -168,6 +168,7 @@ std::vector<TTestingReport> TTestingProcessor::Test(TTestingProcessorRequest& re
         auto getBatchResponse = tabascoRequestTask.GetBatch(request.taskId, batchIndex);
 
         if (getBatchResponse.HasError()) {
+            LOG(ERROR) << request.submissionId << " CRASHED DUE " << getBatchResponse.Error().msg;
             report.emplace_back(0, 0);
             report.back().verdict = TVerdict::CRASH;
             return report;
@@ -203,8 +204,8 @@ TTestingReport TTestingProcessor::ExecuteAndTest(
 
     std::string cpuTLMS = std::to_string(request.cpuTimeLimitMilliSeconds);
     container_.Exec(
-            {EXECUTOR_SCRIPT_PATH, "--execute", EXECUTE_SCRIPT_PATH, "--cpu-time-limit", std::move(cpuTLMS)},
-            {.stdIn = inputTestPath, .stdOut = userOutputPath, .workingDir = USER_ROOT_PATH}
+        {EXECUTOR_SCRIPT_PATH, "--execute", EXECUTE_SCRIPT_PATH, "--cpu-time-limit", std::move(cpuTLMS)},
+        {.stdIn = inputTestPath, .stdOut = userOutputPath, .workingDir = USER_ROOT_PATH}
     );
 
     container_.Exec({"cat", "report.json"}, {.stdOut = localStoragePath_ / "report.json", .workingDir = USER_ROOT_PATH});
