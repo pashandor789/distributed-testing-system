@@ -2,112 +2,62 @@
 
 #include <vector>
 
+#include "utils/parse_json.h"
+
 #include <nlohmann/json.hpp>
 
 namespace NDTS::NTabasco {
 
-static const std::string INPUT_TEST_SUFFIX = "input";
-static const std::string OUTPUT_TEST_SUFFIX = "output";
-
-static const char TEST_NUM_SEPARATOR = '_';
-
-std::string GetInvalidTests(const std::vector<bool>& initializedTests) {
-    std::string invalidTests;
-
-    for (size_t i = 0; i < initializedTests.size(); ++i) {
-        if (!initializedTests[i]) {
-            invalidTests
-                .append(std::to_string(i + 1))
-                .append(" ");
-        }
-    }
-
-    return invalidTests;
-}
-
 bool TUploadTestsHandler::Parse(const crow::request& req, crow::response& res) {
     crow::multipart::message msg(req);
 
-    size_t testCount = msg.parts.size() / 2;
+    auto taskDataIt = msg.part_map.find("taskData.json");
 
-    std::vector<std::string> inputTests(testCount);
-    std::vector<std::string> outputTests(testCount);
-
-    std::vector<bool> initializedInputTests(testCount, false);
-    std::vector<bool> initializedOutputTests(testCount, false);
-
-    uint64_t taskId;
-
-    for (auto& part: msg.parts) {
-        auto contentDisposition = part.get_header_object("Content-Disposition").params;
-
-        if (contentDisposition["name"] == "taskId") {
-            taskId = std::stoi(part.body);
-            continue;
-        }
-
-        if (!contentDisposition.contains("filename")) {
-            continue;
-        }
-
-        int testNum = -1;
-        std::string testSuffix;
-
-        std::stringstream stream(contentDisposition["filename"]);
-
-        stream >> testNum;
-        stream.ignore(1, TEST_NUM_SEPARATOR);
-        stream >> testSuffix;
-
-        std::vector<std::string>* tests = nullptr;
-
-        if (testSuffix == INPUT_TEST_SUFFIX) {
-            initializedInputTests[testNum - 1] = true;
-            tests = &inputTests;
-        }
-
-        if (testSuffix == OUTPUT_TEST_SUFFIX) {
-            initializedOutputTests[testNum - 1] = true;
-            tests = &outputTests;
-        }
-
-        if (tests == nullptr || !(1 <= testNum && testNum <= testCount)) {
-            res.code = 400;
-            std::string errorString;
-
-            errorString
-                .append("bad format: ")
-                .append(testSuffix)
-                .append(" for ")
-                .append(contentDisposition["filename"]);
-
-            res.body = errorString;
-            return false;
-        }
-
-        (*tests)[testNum - 1] = std::move(part.body);
+    if (taskDataIt == msg.part_map.end()) {
+        res.code = 400;
+        res.body = "no taskData.json specified";
+        return false;
     }
 
-    auto invalidInputTests = GetInvalidTests(initializedInputTests);
-    auto invalidOutputTests = GetInvalidTests(initializedOutputTests);
+    auto taskData = ParseJSON(std::move(taskDataIt->second.body), {"taskId"});
 
-    if (!(invalidInputTests.empty() && invalidOutputTests.empty())) {
+    if (taskData.HasError()) {
         res.code = 400;
-        std::string errorString;
-
-        errorString
-            .append("not found tests input: ")
-            .append(invalidInputTests)
-            .append(" output ")
-            .append(invalidOutputTests);
-
-        res.body = errorString;
+        res.body = std::move(taskData.Error());
         return false;
+    }
+
+    size_t testCount = msg.parts.size() / 2;
+
+    std::vector<std::string> inputTests;
+    inputTests.reserve(testCount);
+
+    std::vector<std::string> outputTests;
+    outputTests.reserve(testCount);
+
+    for (size_t testIndex = 1; testIndex < testCount + 1; ++testIndex) {
+        std::string inputTestFileName = std::to_string(testIndex) + "_input";
+        auto inputTestIt = msg.part_map.find(inputTestFileName);
+        if (inputTestIt == msg.part_map.end()) {
+            res.code = 400;
+            res.body = "no " + inputTestFileName;
+            return false;
+        }
+        inputTests.push_back(std::move(inputTestIt->second.body));
+
+        std::string outputTestFileName = std::to_string(testIndex) + "_output";
+        auto outputTestIt = msg.part_map.find(outputTestFileName);
+        if (outputTestIt == msg.part_map.end()) {
+            res.code = 400;
+            res.body = "no " + outputTestFileName;
+            return false;
+        }
+        outputTests.push_back(std::move(outputTestIt->second.body));
     }
 
     inputTests_ = std::move(inputTests);
     outputTests_ = std::move(outputTests);
-    taskId_ = taskId;
+    taskId_ = taskData.Value()["taskId"];
 
     return true;
 }

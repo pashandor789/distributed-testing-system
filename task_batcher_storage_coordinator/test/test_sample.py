@@ -103,7 +103,8 @@ cmake_execute_script = '''
 
 def upload_tests(task_id, tests):
     files = copy.deepcopy(tests)
-    files['taskId'] = task_id
+
+    files['taskData.json'] = json.dumps({'taskId': task_id})
     response = put_request(f'{HTTP_TABASCO_URL}/uploadTests', files=files)
 
     assert response.status_code == 200, f'uploadTest failed: {response.content.decode()}'
