@@ -18,24 +18,24 @@ public:
 
     TBuilds GetBuilds();
 
-    bool CreateTask(const std::string& taskId);
+    bool CreateTask(uint64_t taskId);
 
     bool UploadTests(
         std::vector<std::string>&& inputTests,
         std::vector<std::string>&& outputTests,
-        const std::string& taskId
+        uint64_t taskId
     );
 
     bool UploadTaskBatches(
         std::vector<std::vector<uint64_t>>&& batches,
-        const std::string& taskId,
+        uint64_t taskId,
         size_t batchSize
     );
 
-    bool UploadTaskRootDir(const std::string& taskId, std::string zipData);
+    bool UploadTaskRootDir(uint64_t taskId, std::string zipData);
 
     std::optional<std::string> GetTest(
-        const std::string& taskId,
+        uint64_t taskId,
         const std::string& testIndex,
         const std::string& testSuffix
     );
@@ -44,11 +44,11 @@ public:
 
     bool UpdateChecker(const std::string& checkerName, std::string checkerData);
 
-    std::optional<std::string> GetTaskMeta(const std::string& taskId);
+    std::optional<std::string> GetTaskMeta(uint64_t taskId);
 
     std::optional<std::string> GetCheckerData(const std::string& checkerName);
 
-    std::optional<std::string> GetTaskRootDir(const std::string& taskId);
+    std::optional<std::string> GetTaskRootDir(uint64_t taskId);
 
 private:
     TStorageClientImpl impl_;

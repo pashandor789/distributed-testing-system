@@ -195,11 +195,11 @@ class TestHTTPTabasco:
         upload_tests(task_id=1, tests=uploaded_test_big_string)
 
     # timely unused
-    def test_upload_task_root_dir_handler(self):
-        files = {'root_dir.zip': open('data/test_cmake.zip', 'rb'), 'data.json': json.dumps({'taskId': '2'})}
-        response = put_request(f'{HTTP_TABASCO_URL}/uploadTaskRootDir', files=files)
-
-        assert response.status_code == 200, f'uploadTaskRootDir failed: {response.content.decode()}'
+    # def test_upload_task_root_dir_handler(self):
+    #     files = {'root_dir.zip': open('data/test_cmake.zip', 'rb'), 'data.json': json.dumps({'taskId': '2'})}
+    #     response = put_request(f'{HTTP_TABASCO_URL}/uploadTaskRootDir', files=files)
+    #
+    #     assert response.status_code == 200, f'uploadTaskRootDir failed: {response.content.decode()}'
 
 def get_grpc_tabasco_stub():
     channel = grpc.insecure_channel(

@@ -9,7 +9,7 @@ TTabascoGRPCServiceImpl::TTabascoGRPCServiceImpl(const TTabascoServerConfig& con
 {}
 
 grpc::Status TTabascoGRPCServiceImpl::GetBatch(grpc::ServerContext* context, const TGetBatchRequest* request, TGetBatchResponse* reply) {
-    std::string taskId = std::to_string(request->task_id());
+    uint64_t taskId = request->task_id();
     size_t batchId = request->batch_id();
 
     auto maybeData = storageClient_.GetTaskMeta(taskId);
@@ -37,7 +37,7 @@ grpc::Status TTabascoGRPCServiceImpl::GetBatch(grpc::ServerContext* context, con
 }
 
 grpc::Status TTabascoGRPCServiceImpl::GetScripts(grpc::ServerContext* context, const TGetScriptsRequest* request, TGetScriptsResponse* reply) {
-    std::string taskId = std::to_string(request->task_id());
+    uint64_t taskId = request->task_id();
     
     auto maybeBuild = storageClient_.GetBuild(request->build_name());
 

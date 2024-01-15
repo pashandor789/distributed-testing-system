@@ -13,7 +13,7 @@ public:
     bool Parse(const crow::request& req, crow::response& res);
 
 private:
-    std::string taskId_;
+    uint64_t taskId_;
     std::vector<std::string> inputTests_;
     std::vector<std::string> outputTests_;
 };

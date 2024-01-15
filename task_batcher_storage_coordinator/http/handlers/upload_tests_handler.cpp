@@ -36,13 +36,13 @@ bool TUploadTestsHandler::Parse(const crow::request& req, crow::response& res) {
     std::vector<bool> initializedInputTests(testCount, false);
     std::vector<bool> initializedOutputTests(testCount, false);
 
-    std::string taskId;
+    uint64_t taskId;
 
     for (auto& part: msg.parts) {
         auto contentDisposition = part.get_header_object("Content-Disposition").params;
 
         if (contentDisposition["name"] == "taskId") {
-            taskId = std::move(part.body);
+            taskId = std::stoi(part.body);
             continue;
         }
 
@@ -105,20 +105,9 @@ bool TUploadTestsHandler::Parse(const crow::request& req, crow::response& res) {
         return false;
     }
 
-    if (taskId.empty()) {
-        res.code = 400;
-        std::string errorString;
-
-        errorString
-            .append("taskId not specified");
-
-        res.body = errorString;
-        return false;
-    }
-
     inputTests_ = std::move(inputTests);
     outputTests_ = std::move(outputTests);
-    taskId_ = std::move(taskId);
+    taskId_ = taskId;
 
     return true;
 }
