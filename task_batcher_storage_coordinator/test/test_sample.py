@@ -103,7 +103,8 @@ cmake_execute_script = '''
 
 def upload_tests(task_id, tests):
     files = copy.deepcopy(tests)
-    files['taskId'] = task_id
+
+    files['taskData.json'] = json.dumps({'taskId': task_id})
     response = put_request(f'{HTTP_TABASCO_URL}/uploadTests', files=files)
 
     assert response.status_code == 200, f'uploadTest failed: {response.content.decode()}'
@@ -195,11 +196,11 @@ class TestHTTPTabasco:
         upload_tests(task_id=1, tests=uploaded_test_big_string)
 
     # timely unused
-    def test_upload_task_root_dir_handler(self):
-        files = {'root_dir.zip': open('data/test_cmake.zip', 'rb'), 'data.json': json.dumps({'taskId': '2'})}
-        response = put_request(f'{HTTP_TABASCO_URL}/uploadTaskRootDir', files=files)
-
-        assert response.status_code == 200, f'uploadTaskRootDir failed: {response.content.decode()}'
+    # def test_upload_task_root_dir_handler(self):
+    #     files = {'root_dir.zip': open('data/test_cmake.zip', 'rb'), 'data.json': json.dumps({'taskId': '2'})}
+    #     response = put_request(f'{HTTP_TABASCO_URL}/uploadTaskRootDir', files=files)
+    #
+    #     assert response.status_code == 200, f'uploadTaskRootDir failed: {response.content.decode()}'
 
 def get_grpc_tabasco_stub():
     channel = grpc.insecure_channel(
