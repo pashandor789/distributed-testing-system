@@ -15,7 +15,7 @@ import requests
 
 import pytest
 
-HTTP_TABASCO_URL = 'http://http_tabasco:8080'
+HTTP_TABASCO_URL = 'http://localhost:8080'
 GRPC_TABASCO_URL = 'grpc_tabasco:9090'
 
 
@@ -87,6 +87,19 @@ def build_name():
 init_script = '''mv $1 main.cpp; g++ main.cpp -o executable'''
 execute_script = './executable'
 
+cmake_init_script = '''
+mv $1 foo.cpp
+
+mkdir build
+cd build
+cmake ..
+cmake --build .
+'''
+
+cmake_execute_script = '''
+./build/test
+'''
+
 
 def upload_tests(task_id, tests):
     files = copy.deepcopy(tests)
@@ -112,9 +125,18 @@ class TestHTTPTabasco:
 
         create_build(data)
 
+        data = {
+            'buildName': 'cmake',
+            'description': 'test description',
+            'executeScript': cmake_execute_script,
+            'initScript': cmake_init_script
+        }
+
+        create_build(data)
+
     def test_builds_handler(self):
         response = get_request(f'{HTTP_TABASCO_URL}/builds')
-        builds = json.loads(response.content.decode())["items"]
+        builds = json.loads(response.content.decode())["builds"]
 
         assert response.status_code == 200, f'builds failed: {response.content.decode()}'
 
@@ -147,7 +169,7 @@ class TestHTTPTabasco:
         assert response.status_code == 200, f'updateBuild failed: {response.content.decode()}'
 
         response = get_request(f'{HTTP_TABASCO_URL}/builds')
-        builds = json.loads(response.content.decode())["items"]
+        builds = json.loads(response.content.decode())["builds"]
 
         assert response.status_code == 200, f'builds failed: {response.content.decode()}'
 
@@ -173,11 +195,11 @@ class TestHTTPTabasco:
         upload_tests(task_id=1, tests=uploaded_test_big_string)
 
     # timely unused
-    # def test_upload_task_root_dir_handler(self):
-    #     files = {'root_dir.zip': open('gen/test_cmake.zip', 'rb'), 'data.json': json.dumps({'taskId': '2'})}
-    #     response = put_request(f'{HTTP_TABASCO_URL}/uploadTaskRootDir', files=files)
-    #
-    #     assert response.status_code == 200, f'uploadTaskRootDir failed: {response.content.decode()}'
+    def test_upload_task_root_dir_handler(self):
+        files = {'root_dir.zip': open('data/test_cmake.zip', 'rb'), 'data.json': json.dumps({'taskId': '2'})}
+        response = put_request(f'{HTTP_TABASCO_URL}/uploadTaskRootDir', files=files)
+
+        assert response.status_code == 200, f'uploadTaskRootDir failed: {response.content.decode()}'
 
 def get_grpc_tabasco_stub():
     channel = grpc.insecure_channel(

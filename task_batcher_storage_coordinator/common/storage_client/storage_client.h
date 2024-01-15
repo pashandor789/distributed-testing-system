@@ -21,8 +21,8 @@ public:
     bool CreateTask(const std::string& taskId);
 
     bool UploadTests(
-        std::vector<std::string>&& tests,
-        const std::string& testSuffix,
+        std::vector<std::string>&& inputTests,
+        std::vector<std::string>&& outputTests,
         const std::string& taskId
     );
 
