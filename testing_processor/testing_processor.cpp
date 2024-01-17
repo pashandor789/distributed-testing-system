@@ -71,7 +71,7 @@ void TTestingProcessor::Process(TTestingProcessorRequest request) {
 bool TTestingProcessor::Prepare(TTestingProcessorRequest& request) {
     TTabascoRequestTask tabascoRequestTask(tabasco_);
 
-    auto getScriptsResponse = tabascoRequestTask.GetScripts(request.taskId, request.buildName);
+    auto getScriptsResponse = tabascoRequestTask.GetScripts(request.taskId, request.buildId);
 
     if (getScriptsResponse.HasError()) {
         LOG(ERROR) << "TabascoRequestTask failed: " <<  getScriptsResponse.Error().msg << " for submission: " << request.submissionId;

@@ -15,12 +15,39 @@ std::vector<nlohmann::json> MoveToJSONVector(TItems items) {
     return movedData;
 }
 
+nlohmann::json TTaskMetaData::MoveToJSON() {
+    nlohmann::json data;
+
+    data["taskId"] = taskId;
+    data["batches"] = std::move(batches);
+    data["batchSize"] = batchSize;
+
+    return data;
+}
+
+TTaskMetaData TTaskMetaData::FromJSON(nlohmann::json data) {
+    TTaskMetaData taskMetaData;
+
+    if (data.contains("batches")) {
+        taskMetaData.batches = std::move(data["batches"]);
+    }
+
+    if (data.contains("taskId")) {
+        taskMetaData.taskId = data["taskId"];
+    }
+
+    if (data.contains("batchSize")) {
+        taskMetaData.batchSize = data["batchSize"];
+    }
+
+    return taskMetaData;
+}
+
+
 nlohmann::json TBuild::MoveToJSON() {
     nlohmann::json data;
 
-    data["description"] = std::move(description);
-    data["name"] = std::move(name);
-
+    data["id"] = id;
     data["initScript"] = std::move(initScript);
     data["executeScript"] = std::move(executeScript);
 
@@ -30,12 +57,8 @@ nlohmann::json TBuild::MoveToJSON() {
 TBuild TBuild::FromJSON(nlohmann::json data) {
     TBuild build;
 
-    if (data.contains("description")) {
-        build.description = std::move(data["description"]);
-    }
-
-    if (data.contains("name")) {
-        build.name = std::move(data["name"]);
+    if (data.contains("id")) {
+        build.id = std::move(data["id"]);
     }
 
     if (data.contains("initScript")) {

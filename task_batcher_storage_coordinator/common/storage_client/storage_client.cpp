@@ -1,121 +1,283 @@
 #include "storage_client.h"
 
+#include <bsoncxx/builder/basic/document.hpp>
+#include <bsoncxx/json.hpp>
+#include <mongocxx/client.hpp>
+#include <mongocxx/instance.hpp>
+#include <mongocxx/uri.hpp>
+
 namespace NDTS::NTabasco {
 
+using bsoncxx::builder::basic::kvp;
+using bsoncxx::builder::basic::make_array;
+using bsoncxx::builder::basic::make_document;
+
+static mongocxx::instance instance{};
+
+/*
+
+    schema: (collection)
+        task:
+            taskId: ui64
+            testId: ui64
+            testType: input/output (string)
+            content: string
+        task_meta:
+            taskId: ui64
+            batches: vector<ui64>
+            batchSize: ui64
+        builds:
+            id: ui64
+            executeScript: string
+            initScript: string
+
+*/
+
+class TStorageClient::TImpl {
+public:
+    TImpl(const TStorageClientConfig& config)
+        : client_(mongocxx::uri(config.uri()))
+        , db_(client_.database(config.dbname()))
+        , buildsCollection_(db_.collection("builds"))
+        , taskMetaCollection_(db_.collection("taskMeta"))
+        , taskTestsCollection_(db_.collection("taskTests"))
+    {}
+
+    TOptionalError UpsertTaskTests(TTask task) {
+        try {
+            size_t testCount = task.tests.inputTests.size();
+
+            std::vector<bsoncxx::document::value> documents;
+            documents.reserve(testCount * 2);
+
+            auto& inputTests = task.tests.inputTests;
+
+            for (size_t testIndex = 0; testIndex < testCount; ++testIndex) {
+                auto options = mongocxx::options::update().upsert(true);
+
+                auto upsertDoc = make_document(
+                    kvp("$set", make_document(kvp("content", std::move(inputTests[testIndex]))))
+                );
+
+                auto filter = make_document(
+                    kvp("taskId", static_cast<int64_t>(task.id)),
+                    kvp("testId", static_cast<int64_t>(testIndex + 1)),
+                    kvp("testType", "input")
+                );
+
+                taskTestsCollection_.update_one(filter.view(), upsertDoc.view(), options);
+            }
+
+            auto& outputTests = task.tests.outputTests;
+
+            for (size_t testIndex = 0; testIndex < testCount; ++testIndex) {
+                auto options = mongocxx::options::update().upsert(true);
+
+                auto upsertDoc = make_document(
+                    kvp("$set", make_document(kvp("content", std::move(outputTests[testIndex]))))
+                );
+
+                auto filter = make_document(
+                    kvp("taskId", static_cast<int64_t>(task.id)),
+                    kvp("testId", static_cast<int64_t>(testIndex + 1)),
+                    kvp("testType", "output")
+                );
+
+                taskTestsCollection_.update_one(filter.view(), upsertDoc.view(), options);
+            }
+            return std::nullopt;
+        } catch (std::exception& e) {
+            return e.what();
+        }
+    }
+
+    TOptionalError UpsertTaskMetaData(TTaskMetaData taskMetaData) {
+        try {
+            auto upsertDoc = make_document(
+                kvp(
+                    "$set",
+                    bsoncxx::from_json(taskMetaData.MoveToJSON().dump())
+                )
+            );
+
+            auto filter = make_document(kvp("_id", static_cast<int64_t>(taskMetaData.taskId)));
+
+            auto options = mongocxx::options::update().upsert(true);
+
+            taskMetaCollection_.update_one(filter.view(), upsertDoc.view(), options);
+
+            return std::nullopt;
+        } catch (std::exception& e) {
+            return e.what();
+        }
+    }
+
+    TExpected<TTaskMetaData, TError> GetTaskMetaData(uint64_t taskId) {
+        try {
+            auto maybeMeta = taskMetaCollection_.find_one(make_document(kvp("_id", static_cast<int64_t>(taskId))));
+
+            if (!maybeMeta.has_value()) {
+                auto err = TError{ .msg = "404 Not Found TaskMetaData for id: " + std::to_string(taskId) };
+                return TUnexpected(std::move(err));
+            }
+
+            TTaskMetaData metaData;
+
+            auto metaDoc = std::move(maybeMeta.value());
+
+            return TTaskMetaData::FromJSON(nlohmann::json::parse(bsoncxx::to_json(metaDoc.view())));
+        } catch (std::exception& e) {
+            return TUnexpected<TError>({.msg = e.what()});
+        }
+    }
+
+    TExpected<TTaskTests, TError> GetTaskBatch(uint64_t taskId, uint64_t batchId) {
+        try {
+            auto getResp = GetTaskMetaData(taskId);
+
+            if (getResp.HasError()) {
+                return TUnexpected(getResp.Error());
+            }
+
+            auto taskMetaData = std::move(getResp.Value());
+
+            TTaskTests tests;
+            auto& inputTests = tests.inputTests;
+            auto& outputTests = tests.outputTests;
+
+            int64_t frontTestId = taskMetaData.batches[batchId].front();
+            int64_t backTestId = taskMetaData.batches[batchId].back();
+
+            int64_t batchTestCount = backTestId - frontTestId + 1;
+
+            inputTests.resize(batchTestCount);
+            outputTests.resize(batchTestCount);
+
+            auto filter = make_document(
+                kvp("taskId", static_cast<int64_t>(taskId)),
+                kvp("testId",
+                    make_document(
+                        kvp("$gte", frontTestId),
+                        kvp("$lte", backTestId)
+                    )
+                )
+            );
+
+            for (auto& doc: taskTestsCollection_.find(filter.view())) {
+                auto testType = doc["testType"].get_string().value;
+                auto testId = doc["testId"].get_int64().value;
+                auto content = doc["content"].get_string().value;
+
+                if (testType == "input") {
+                   inputTests[testId - frontTestId] = content;
+                }
+
+                if (testType == "output") {
+                    outputTests[testId - frontTestId] = content;
+                }
+            }
+
+            return tests;
+        } catch (std::exception& e) {
+            return TUnexpected<TError>({.msg = e.what()});
+        }
+    }
+
+    TOptionalError UpsertBuild(TBuild build) {
+        try {
+            auto jsonBuild = build.MoveToJSON();
+            jsonBuild.erase("id");
+
+            auto upsertDoc = make_document(
+                kvp(
+                    "$set",
+                    bsoncxx::from_json(jsonBuild.dump())
+                )
+            );
+
+            auto filter = make_document(kvp("_id", static_cast<int64_t>(build.id)));
+
+            auto options = mongocxx::options::update().upsert(true);
+
+            buildsCollection_.update_one(filter.view(), upsertDoc.view(), options);
+
+            return std::nullopt;
+        } catch (std::exception& e) {
+            return e.what();
+        }
+    }
+
+    TExpected<TBuild, TStorageClient::TError> GetBuild(uint64_t buildId) {
+        try {
+            auto maybeBuild = buildsCollection_.find_one(make_document(kvp("_id", static_cast<int64_t>(buildId))));
+
+            if (!maybeBuild.has_value()) {
+                auto err = TError{ .msg = "404 Not Found Build for id: " + std::to_string(buildId) };
+                return TUnexpected<TError>(std::move(err));
+            }
+
+            auto buildDoc = std::move(maybeBuild.value());
+
+            return TBuild::FromJSON(nlohmann::json::parse(bsoncxx::to_json(buildDoc)));
+        } catch (std::exception& e) {
+            return TUnexpected<TError>({.msg = e.what()});
+        }
+    }
+
+    TExpected<TBuilds, TError> GetBuilds() {
+       try {
+           TBuilds builds;
+
+           for (const auto &buildDoc: buildsCollection_.find({})) {
+               builds.items.push_back(TBuild::FromJSON(nlohmann::json::parse(bsoncxx::to_json(buildDoc))));
+           }
+
+           return builds;
+       } catch (std::exception& e) {
+           return TUnexpected<TError>({.msg = e.what()});
+       }
+    }
+
+private:
+    mongocxx::client client_;
+    mongocxx::database db_;
+
+private:
+    mongocxx::collection buildsCollection_;
+    mongocxx::collection taskMetaCollection_;
+    mongocxx::collection taskTestsCollection_;
+};
+
 TStorageClient::TStorageClient(const TStorageClientConfig& config)
-    : impl_(config)
+    : pImpl_(std::make_shared<TImpl>(config))
 {}
 
-bool TStorageClient::CreateBuild(TBuild build) {
-    auto buildName = build.name;
-    auto deserializedBuildData = build.MoveToJSON().dump();
-
-    return impl_.InsertData("builds", buildName, std::move(deserializedBuildData));
+TStorageClient::TOptionalError TStorageClient::UpsertTaskTests(TTask task) {
+    return pImpl_->UpsertTaskTests(std::move(task));
 }
 
-bool TStorageClient::UpdateBuild(TBuild build) {
-    auto buildName = build.name;
-    auto deserializedBuildData = build.MoveToJSON().dump();
-
-    return impl_.UpdateData("builds", buildName, std::move(deserializedBuildData));
+TStorageClient::TOptionalError TStorageClient::UpsertTaskMetaData(TTaskMetaData taskMetaData) {
+    return pImpl_->UpsertTaskMetaData(std::move(taskMetaData));
 }
 
-std::optional<TBuild> TStorageClient::GetBuild(const std::string& buildName) {
-    auto maybeData = impl_.GetData("builds", buildName);
-
-    if (!maybeData.has_value()) {
-        return std::nullopt;
-    }
-
-    auto data = nlohmann::json::parse(std::move(maybeData.value()), nullptr, false);
-
-    return TBuild::FromJSON(std::move(data));
+TStorageClient::TOptionalError TStorageClient::UpsertBuild(TBuild build) {
+    return pImpl_->UpsertBuild(std::move(build));
 }
 
-bool TStorageClient::CreateTask(uint64_t taskId) {
-    return impl_.CreateBucket(std::to_string(taskId));
+TExpected<TTaskTests, TStorageClient::TError> TStorageClient::GetTaskTestsBatch(uint64_t taskId, uint64_t batchId) {
+    return pImpl_->GetTaskBatch(taskId, batchId);
 }
 
-bool TStorageClient::UploadTests(
-    std::vector<std::string>&& inputTests,
-    std::vector<std::string>&& outputTests,
-    uint64_t taskId
-) {
-    size_t size = inputTests.size();
-
-    for (size_t i = 0; i < size; ++i) {
-        std::string inputTestFileName = std::to_string(i + 1) + "_input";
-
-        if (!impl_.UpsertData(std::to_string(taskId), inputTestFileName, std::move(inputTests[i]))) {
-            return false;
-        }
-
-        std::string outputTestFileName = std::to_string(i + 1) + "_output";
-
-        if (!impl_.UpsertData(std::to_string(taskId), outputTestFileName, std::move(outputTests[i]))) {
-            return false;
-        }
-    }
-
-    return true;
+TExpected<TTaskMetaData, TStorageClient::TError> TStorageClient::GetTaskMetaData(uint64_t taskId) {
+    return pImpl_->GetTaskMetaData(taskId);
 }
 
-bool TStorageClient::UploadTaskRootDir(uint64_t taskId, std::string zipData) {
-    return impl_.UpsertData(std::to_string(taskId), "root_dir.zip", std::move(zipData));
+TExpected<TBuild, TStorageClient::TError> TStorageClient::GetBuild(uint64_t buildId) {
+    return pImpl_->GetBuild(buildId);
 }
 
-bool TStorageClient::UploadTaskBatches(
-    std::vector<std::vector<uint64_t>>&& batches,
-    uint64_t taskId,
-    size_t batchSize
-) {
-    nlohmann::json metaData;
-    metaData["batchSize"] = batchSize;
-    metaData["batches"] = std::move(batches);
-
-    return impl_.UpsertData(std::to_string(taskId), "meta.json", metaData.dump());
-}
-
-TBuilds TStorageClient::GetBuilds() {
-    auto foundBuilds = impl_.GetFiles("builds");
-
-    TBuilds builds;
-    builds.items.reserve(foundBuilds.size());
-
-    for (auto& file: foundBuilds) {
-        auto data = nlohmann::json::parse(std::move(file.content), nullptr, false);
-        builds.items.push_back(TBuild::FromJSON(std::move(data)));
-    }
-
-    return builds;
-}
-
-std::optional<std::string> TStorageClient::GetTest(
-    uint64_t taskId,
-    const std::string& testIndex,
-    const std::string& testSuffix
-) {
-    return impl_.GetData(std::to_string(taskId), testIndex + "_" + testSuffix);
-}
-
-std::optional<std::string> TStorageClient::GetTaskMeta(uint64_t taskId) {
-    return impl_.GetData(std::to_string(taskId), "meta.json");
-}
-
-bool TStorageClient::CreateChecker(const std::string& checkerName, std::string checkerData) {
-    return impl_.InsertData("checkers", checkerName, std::move(checkerData));
-}
-
-bool TStorageClient::UpdateChecker(const std::string& checkerName, std::string checkerData) {
-    return impl_.UpsertData("checkers", checkerName, std::move(checkerData));
-}
-
-std::optional<std::string> TStorageClient::GetCheckerData(const std::string& checkerName) {
-    return  impl_.GetData("checkers", checkerName);
-}
-
-std::optional<std::string> TStorageClient::GetTaskRootDir(uint64_t taskId) {
-    return impl_.GetData(std::to_string(taskId), "root_dir.zip");
+TExpected<TBuilds, TStorageClient::TError> TStorageClient::GetBuilds() {
+    return pImpl_->GetBuilds();
 }
 
 } // end of NDTS::NTabasco namespace
