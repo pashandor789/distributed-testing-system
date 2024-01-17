@@ -55,9 +55,10 @@ bool TUploadTestsHandler::Parse(const crow::request& req, crow::response& res) {
         outputTests.push_back(std::move(outputTestIt->second.body));
     }
 
-    inputTests_ = std::move(inputTests);
-    outputTests_ = std::move(outputTests);
-    taskId_ = taskData.Value()["taskId"];
+
+    task_.tests.inputTests = std::move(inputTests);
+    task_.tests.outputTests = std::move(outputTests);
+    task_.id = taskData.Value()["taskId"];
 
     return true;
 }
@@ -79,7 +80,7 @@ std::vector<std::vector<size_t>> SplitIntoBatches(
     batches.push_back({});
 
     for (size_t i = 0; i < testsCount; ++i) {
-        size_t testSize = inputTests.size() + outputTests.size();
+        size_t testSize = inputTests[i].size() + outputTests[i].size();
 
         if (accumSize + testSize > batchSize) {
             batches.push_back({});
@@ -98,21 +99,29 @@ void TUploadTestsHandler::Handle(const crow::request& req, crow::response& res, 
         return;
     }
 
-    auto batches = SplitIntoBatches(inputTests_, outputTests_, ctx.server->batchSize_);
-
-    ctx.server->storageClient_.CreateTask(taskId_);
-
-    ctx.server->storageClient_.UploadTaskBatches(
-        std::move(batches),
-        taskId_,
+    auto batches = SplitIntoBatches(
+        task_.tests.inputTests,
+        task_.tests.outputTests,
         ctx.server->batchSize_
     );
 
-    ctx.server->storageClient_.UploadTests(
-        std::move(inputTests_),
-        std::move(outputTests_),
-        taskId_
-    );
+    TTaskMetaData taskMetaData;
+
+    taskMetaData.taskId = task_.id;
+    taskMetaData.batches = std::move(batches);
+    taskMetaData.batchSize = ctx.server->batchSize_;
+
+    if (auto maybeError = ctx.server->storageClient_.UpsertTaskTests(std::move(task_))) {
+        res.code = 400;
+        res.body = "UpsertTaskTests Error: " + std::move(maybeError.value());
+        return;
+    }
+
+    if (auto maybeError = ctx.server->storageClient_.UpsertTaskMetaData(std::move(taskMetaData))) {
+        res.code = 400;
+        res.body = "UpsertTaskMetaData Error: " + std::move(maybeError.value());
+        return;
+    }
 }
 
 } // end of NDTS::TTabasco namespace 

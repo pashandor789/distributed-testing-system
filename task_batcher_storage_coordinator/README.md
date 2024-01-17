@@ -56,7 +56,7 @@ POST /uploadExecuteScript
 ```
 POST /createBuild
 {
-    buildName: <string>
+    buildId: <string>
     executeScriptId: <uint64>
     initScriptId: <uint64>
 }

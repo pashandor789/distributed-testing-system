@@ -1,57 +1,45 @@
 #pragma once
 
-#include "common/proto/storage_client.pb.h"
-#include "impl/storage_client_impl.h"
+#include <optional>
+#include <string>
+#include <memory>
+
 #include "data_repr.h"
+#include "utils/expected.h"
+
+#include "common/proto/storage_client.pb.h"
 
 namespace NDTS::NTabasco {
 
 class TStorageClient {
 public:
+    enum class TErrorCode {};
+    struct TError { std::string msg; };
+    using TOptionalError = std::optional<std::string>;
+
+public:
     TStorageClient(const TStorageClientConfig& config);
 
-    bool CreateBuild(TBuild build);
+public:
+    TOptionalError UpsertTaskTests(TTask task);
 
-    bool UpdateBuild(TBuild build);
+    TOptionalError UpsertTaskMetaData(TTaskMetaData taskMetaData);
 
-    std::optional<TBuild> GetBuild(const std::string& buildName);
+    TOptionalError UpsertBuild(TBuild build);
 
-    TBuilds GetBuilds();
+    TExpected<TTaskTests, TError> GetTaskTestsBatch(uint64_t taskId, uint64_t batchId);
 
-    bool CreateTask(uint64_t taskId);
+    TExpected<TTaskMetaData, TError> GetTaskMetaData(uint64_t taskId);
 
-    bool UploadTests(
-        std::vector<std::string>&& inputTests,
-        std::vector<std::string>&& outputTests,
-        uint64_t taskId
-    );
+    TExpected<TBuild, TError> GetBuild(uint64_t buildId);
 
-    bool UploadTaskBatches(
-        std::vector<std::vector<uint64_t>>&& batches,
-        uint64_t taskId,
-        size_t batchSize
-    );
-
-    bool UploadTaskRootDir(uint64_t taskId, std::string zipData);
-
-    std::optional<std::string> GetTest(
-        uint64_t taskId,
-        const std::string& testIndex,
-        const std::string& testSuffix
-    );
-
-    bool CreateChecker(const std::string& checkerName, std::string checkerData);
-
-    bool UpdateChecker(const std::string& checkerName, std::string checkerData);
-
-    std::optional<std::string> GetTaskMeta(uint64_t taskId);
-
-    std::optional<std::string> GetCheckerData(const std::string& checkerName);
-
-    std::optional<std::string> GetTaskRootDir(uint64_t taskId);
+    TExpected<TBuilds, TError> GetBuilds();
 
 private:
-    TStorageClientImpl impl_;
+    struct TImpl;
+
+private:
+    std::shared_ptr<TImpl> pImpl_;
 };
 
 } // end of NDTS::NTabasco namespace

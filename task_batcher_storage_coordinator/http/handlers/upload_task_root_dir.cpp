@@ -39,21 +39,8 @@ bool TUploadTaskRootDirHandler::Parse(const crow::request& req, crow::response& 
 }
 
 void TUploadTaskRootDirHandler::Handle(const crow::request& req, crow::response& res, const TContext& ctx) {
-    if (!Parse(req, res)) {
-        return;
-    }
-
-    bool success =
-        ctx.server->storageClient_.UploadTaskRootDir(
-            taskId_,
-            std::move(rootDirZipData_)
-        );
-
-    if (!success) {
-        res.code = 500;
-        res.body = "build db error!";
-        return;
-    }
+    res.code = 501;
+    res.body = "Not implemented yet! :)";
 }
 
 } // end of NDTS::TTabasco namespace

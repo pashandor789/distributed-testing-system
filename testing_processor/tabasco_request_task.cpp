@@ -8,11 +8,11 @@ TTabascoRequestTask::TTabascoRequestTask(std::shared_ptr<NTabasco::TTabascoGRPC:
     : tabasco_(std::move(tabasco))
 {}
 
-TExpected<TGetScriptsResponse, TErrorResponse> TTabascoRequestTask::GetScripts(uint64_t taskId, std::string buildName) {
+TExpected<TGetScriptsResponse, TErrorResponse> TTabascoRequestTask::GetScripts(uint64_t taskId, uint64_t buildId) {
     NTabasco::TGetScriptsRequest request;
 
     request.set_task_id(taskId);
-    request.set_build_name(buildName);
+    request.set_build_id(buildId);
 
     grpc::ClientContext context;
 

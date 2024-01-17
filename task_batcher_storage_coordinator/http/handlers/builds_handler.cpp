@@ -3,8 +3,15 @@
 namespace NDTS::NTabasco {
 
 void TBuildsHandler::Handle(const crow::request &req, crow::response &res, const TContext &ctx) {
-    TBuilds builds = ctx.server->storageClient_.GetBuilds();
-    res.body = builds.MoveToJSON().dump();
+    auto expectedBuilds = ctx.server->storageClient_.GetBuilds();
+
+    if (expectedBuilds.HasError()) {
+        res.code = 500;
+        res.body = "GetBuilds Error: " + expectedBuilds.Error().msg;
+        return;
+    }
+
+    res.body = expectedBuilds.Value().MoveToJSON().dump();
 }
 
 } // end of NDTS::TTabasco namespace

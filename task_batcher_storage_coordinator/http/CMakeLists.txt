@@ -9,10 +9,9 @@ add_executable(
     server.cpp
     main.cpp
     handlers/builds_handler.cpp
-    handlers/create_build_handler.cpp
     handlers/upload_tests_handler.cpp
     handlers/upload_task_root_dir.cpp
-    handlers/update_build_handler.cpp
+    handlers/upload_build_handler.cpp
 )
 
 set(DTS_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../..)
@@ -26,7 +25,6 @@ add_subdirectory(${UTILS_DIR} utils)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${TABASCO_ROOT_DIR})
 include_directories(${DTS_ROOT_DIR})
-
 
 target_link_libraries(
     http_tabasco

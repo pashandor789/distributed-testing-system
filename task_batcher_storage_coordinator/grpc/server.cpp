@@ -12,26 +12,23 @@ grpc::Status TTabascoGRPCServiceImpl::GetBatch(grpc::ServerContext* context, con
     uint64_t taskId = request->task_id();
     size_t batchId = request->batch_id();
 
-    auto maybeData = storageClient_.GetTaskMeta(taskId);
+    auto expectedTaskTestsBatch = storageClient_.GetTaskTestsBatch(taskId, batchId);
 
-    if (!maybeData.has_value()) {
-        return {grpc::StatusCode::NOT_FOUND, "meta.json wasn't found"};
+    if (expectedTaskTestsBatch.HasError()) {
+        return {grpc::StatusCode::NOT_FOUND, expectedTaskTestsBatch.Error().msg};
     }
 
-    auto data = std::move(maybeData.value());
+    auto taskTestsBatch = std::move(expectedTaskTestsBatch.Value());
 
-    nlohmann::json metaData = nlohmann::json::parse(std::move(data), nullptr, false);
+    *reply->mutable_input() = {
+        std::make_move_iterator(taskTestsBatch.inputTests.begin()),
+        std::make_move_iterator(taskTestsBatch.inputTests.end())
+    };
 
-    auto batches = std::move(metaData["batches"]);
-
-    for (const auto& batchTestInd : batches[batchId]) {
-        std::string testIndex = std::to_string(batchTestInd.get<int>());
-        auto maybeInputTest = storageClient_.GetTest(taskId, testIndex, "input");
-        auto maybeOutputTest = storageClient_.GetTest(taskId, testIndex, "output");
-
-        reply->add_input(std::move(maybeInputTest.value()));
-        reply->add_output(std::move(maybeOutputTest.value()));
-    }
+    *reply->mutable_output() = {
+        std::make_move_iterator(taskTestsBatch.outputTests.begin()),
+        std::make_move_iterator(taskTestsBatch.outputTests.end())
+    };
 
     return grpc::Status::OK;
 }
@@ -39,29 +36,26 @@ grpc::Status TTabascoGRPCServiceImpl::GetBatch(grpc::ServerContext* context, con
 grpc::Status TTabascoGRPCServiceImpl::GetScripts(grpc::ServerContext* context, const TGetScriptsRequest* request, TGetScriptsResponse* reply) {
     uint64_t taskId = request->task_id();
     
-    auto maybeBuild = storageClient_.GetBuild(request->build_name());
+    auto expectedBuild = storageClient_.GetBuild(request->build_id());
 
-    if (!maybeBuild.has_value()) {
-        return {grpc::StatusCode::NOT_FOUND, "Scripts weren't found"};
+    if (expectedBuild.HasError()) {
+        return {grpc::StatusCode::NOT_FOUND, expectedBuild.Error().msg};
     }
 
-    TBuild build = std::move(maybeBuild.value()) ;
+    TBuild build = std::move(expectedBuild.Value());
 
-    if (auto maybeData = storageClient_.GetTaskMeta(taskId)) {
-        auto data = std::move(maybeData.value());
-
-        nlohmann::json metaData = nlohmann::json::parse(std::move(data), nullptr, false);
-
-        size_t batchCount = metaData["batches"].size();
-        reply->set_batch_count(batchCount);
-    }
-    
     reply->set_init_script(std::move(build.initScript));
     reply->set_execute_script(std::move(build.executeScript));
 
-    if (auto maybeRootDir = storageClient_.GetTaskRootDir(taskId)) {
-        reply->set_task_root_dir(std::move(maybeRootDir.value()));
+    auto expectedTaskMetaData = storageClient_.GetTaskMetaData(taskId);
+
+    if (expectedTaskMetaData.HasError()) {
+        return {grpc::StatusCode::NOT_FOUND, expectedTaskMetaData.Error().msg};
     }
+
+    TTaskMetaData taskMetaData = std::move(expectedTaskMetaData.Value());
+
+    reply->set_batch_count(taskMetaData.batches.size());
 
     return grpc::Status::OK;
 }

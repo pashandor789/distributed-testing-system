@@ -6,14 +6,14 @@
 
 namespace NDTS::NTabasco {
 
-class TUploadTestsHandler {
+class TUploadBuildHandler {
 public:
     void Handle(const crow::request& req, crow::response& res, const TContext& ctx);
 
     bool Parse(const crow::request& req, crow::response& res);
 
 private:
-    TTask task_;
+    TBuild build_;
 };
 
 } // end of NDTS::TTabasco namespace
