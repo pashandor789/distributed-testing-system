@@ -34,7 +34,7 @@ void TBrokerClient::Run() {
             std::string body(message.body(), message.bodySize());
 
             auto requestJson = nlohmann::json::parse(std::move(body), nullptr, false);
-            auto request = TTestingProcessorRequest(requestJson);
+            auto request = TTestingProcessorRequest(std::move(requestJson));
 
             LOG(INFO) << "Received submission with id: " <<  request.submissionId;
 

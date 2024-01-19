@@ -19,7 +19,7 @@ bool TUploadTestsHandler::Parse(const crow::request& req, crow::response& res) {
         return false;
     }
 
-    auto taskData = ParseJSON(std::move(taskDataIt->second.body), {"taskId"});
+    auto taskData = ParseJSON(taskDataIt->second.body, {"taskId"});
 
     if (taskData.HasError()) {
         res.code = 400;

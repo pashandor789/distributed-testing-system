@@ -9,7 +9,7 @@
 
 // on error return's string of missing fields separated with ','
 TExpected<nlohmann::json, std::string> ParseJSON(
-    std::string serializedJSON,
+    const std::string& serializedJSON,
     const std::vector<std::string>& expectedFields
 );
 

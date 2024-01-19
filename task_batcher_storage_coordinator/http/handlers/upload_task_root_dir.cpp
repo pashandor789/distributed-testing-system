@@ -20,7 +20,7 @@ bool TUploadTaskRootDirHandler::Parse(const crow::request& req, crow::response& 
     }
 
     auto parseResult = ParseJSON(
-        std::move(metaDataIt->second.body),
+        metaDataIt->second.body,
         {"taskId"}
     );
 

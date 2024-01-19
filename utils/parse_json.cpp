@@ -31,10 +31,10 @@ std::vector<std::string> FindMissingJSONFields(
 }
 
 TExpected<nlohmann::json, std::string> ParseJSON(
-    std::string serializedJSON,
+    const std::string& serializedJSON,
     const std::vector<std::string>& expectedFields
 ) {
-    nlohmann::json data = nlohmann::json::parse(std::move(serializedJSON), nullptr, false);
+    nlohmann::json data = nlohmann::json::parse(serializedJSON, nullptr, false);
 
     if (data.is_discarded()) {
         return TUnexpected<std::string>("bad json");
