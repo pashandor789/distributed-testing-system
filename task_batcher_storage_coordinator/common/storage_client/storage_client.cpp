@@ -259,7 +259,7 @@ public:
     }
 
 private:
-    TLRUCache<uint64_t, TBuild, 50> buildsCache_{};
+    TLRUCache<uint64_t, TBuild, 3> buildsCache_{};
     TLRUCache<uint64_t, TTaskMetaData, 50> taskMetaCache_{};
 
 private:

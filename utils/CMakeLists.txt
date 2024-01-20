@@ -10,7 +10,6 @@ project(utils)
 add_library(
     dts_utils
     parse_json.cpp
-    lru_cache.h
 )
 
 target_include_directories(dts_utils PUBLIC ${DTS_ROOT_DIR})

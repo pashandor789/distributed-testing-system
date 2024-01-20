@@ -1,7 +1,7 @@
 import json
-import os
 import string
 import sys
+import tqdm
 
 sys.path.append('proto')
 
@@ -15,9 +15,8 @@ import requests
 
 import pytest
 
-HTTP_TABASCO_URL = 'http://http_tabasco:8080'
+HTTP_TABASCO_URL = 'http://localhost:8080'
 GRPC_TABASCO_URL = 'grpc_tabasco:9090'
-
 
 def post_request(url, **kwargs):
     return noexcept_request(url, requests.post, **kwargs)
@@ -118,7 +117,7 @@ def upload_build(data):
 class TestHTTPTabasco:
     def test_upload_build_handler(self):
         data = {
-            'id': 0,
+            'id': 2,
             'executeScript': execute_script,
             'initScript': init_script
         }
@@ -126,7 +125,7 @@ class TestHTTPTabasco:
         upload_build(data)
 
         data = {
-            'id': 1,
+            'id': 3,
             'executeScript': cmake_execute_script,
             'initScript': cmake_init_script
         }

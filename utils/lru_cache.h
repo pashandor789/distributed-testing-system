@@ -4,6 +4,7 @@
 #include <optional>
 #include <unordered_map>
 #include <list>
+#include <iostream>
 
 template <typename TKey, typename TValue, size_t capacity>
 class TLRUCache {
@@ -16,10 +17,12 @@ public:
         }
 
         order_.push_front({key, value});
+        values_[key] = order_.begin();
 
         if (values_.size() > capacity) {
             auto& [k, v] = order_.back();
             values_.erase(k);
+            order_.pop_back();
         }
     }
 

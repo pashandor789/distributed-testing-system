@@ -4,8 +4,8 @@
 
 # autogen
 *build*/
-test/proto/
-test/gen/
+task_batcher_storage_coordinator/test/proto/
+task_batcher_storage_coordinator/test/gen/
 shared-libs/
 
 # tmp
