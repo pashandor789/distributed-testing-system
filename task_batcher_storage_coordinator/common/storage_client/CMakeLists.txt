@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.21)
 
 include_guard(GLOBAL)
 
+set(CMAKE_CXX_STANDARD 23)
+
 include_directories(/usr/local/include/mongocxx/v_noabi/)
 include_directories(/usr/local/include/bsoncxx/v_noabi/)
 
