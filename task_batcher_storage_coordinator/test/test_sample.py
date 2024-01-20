@@ -123,7 +123,7 @@ def upload_build(data):
 class TestHTTPTabasco:
     def test_upload_build_handler(self):
         data = {
-            'id': 2,
+            'id': 0,
             'executeScript': execute_script,
             'initScript': init_script
         }
@@ -131,7 +131,7 @@ class TestHTTPTabasco:
         upload_build(data)
 
         data = {
-            'id': 3,
+            'id': 1,
             'executeScript': cmake_execute_script,
             'initScript': cmake_init_script
         }
