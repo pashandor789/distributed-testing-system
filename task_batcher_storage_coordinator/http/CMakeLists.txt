@@ -9,6 +9,7 @@ add_executable(
     server.cpp
     main.cpp
     handlers/builds_handler.cpp
+    handlers/build_handler.cpp
     handlers/upload_tests_handler.cpp
     handlers/upload_task_root_dir.cpp
     handlers/upload_build_handler.cpp

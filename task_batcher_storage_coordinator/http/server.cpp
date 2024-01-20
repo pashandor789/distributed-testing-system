@@ -1,5 +1,6 @@
 #include "server.h"
 
+#include "handlers/build_handler.h"
 #include "handlers/builds_handler.h"
 #include "handlers/upload_task_root_dir.h"
 #include "handlers/upload_tests_handler.h"
@@ -13,7 +14,7 @@ template <typename THandler>
 THandlerCallback GetHandlerCallback(TTabascoHTTPServer* server) {
     THandlerCallback callback =
         [server](const crow::request& req) -> crow::response {
-            THandler handler;
+            THandler handler{};
             crow::response resp;
             handler.Handle(req, resp, TContext{.server = server});
             return resp;
@@ -47,6 +48,10 @@ void TTabascoHTTPServer::InitHandlers() {
 
     CROW_ROUTE(app_, "/builds").methods("GET"_method) (
         GetHandlerCallback<TBuildsHandler>(this)
+    );
+
+    CROW_ROUTE(app_, "/build").methods("GET"_method) (
+        GetHandlerCallback<TBuildHandler>(this)
     );
 }
 

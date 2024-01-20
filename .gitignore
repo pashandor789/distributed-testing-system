@@ -1,15 +1,13 @@
-build/
-*build-debug/
-*build-release/
-clion_build/
-downloads/
-tmp/
+# env
 .idea/
 .vscode/
+
+# autogen
+*build*/
 test/proto/
 test/gen/
-task_batcher_storage_coordinator/test/proto/
-__pycache__/
 shared-libs/
-kek/
-scratch
+
+# tmp
+__pycache__/
+downloads/
