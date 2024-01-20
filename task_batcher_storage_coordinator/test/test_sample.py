@@ -1,7 +1,7 @@
 import json
+import os
 import string
 import sys
-import tqdm
 
 sys.path.append('proto')
 
@@ -15,8 +15,14 @@ import requests
 
 import pytest
 
-HTTP_TABASCO_URL = 'http://localhost:8080'
-GRPC_TABASCO_URL = 'grpc_tabasco:9090'
+HTTP_TABASCO_URL = f'http://localhost:8080'
+if os.getenv("HTTP_TABASCO_HOSTNAME") is not None:
+    HTTP_TABASCO_URL = f'http://{os.getenv("HTTP_TABASCO_HOSTNAME")}:8080'
+
+GRPC_TABASCO_URL = 'localhost:9090'
+if os.getenv("GRPC_TABASCO_HOSTNAME") is not None:
+    HTTP_TABASCO_URL = f'http://{os.getenv("GRPC_TABASCO_HOSTNAME")}:9000'
+
 
 def post_request(url, **kwargs):
     return noexcept_request(url, requests.post, **kwargs)
@@ -150,6 +156,7 @@ class TestHTTPTabasco:
     #     response = put_request(f'{HTTP_TABASCO_URL}/uploadTaskRootDir', files=files)
     #
     #     assert response.status_code == 200, f'uploadTaskRootDir failed: {response.content.decode()}'
+
 
 def get_grpc_tabasco_stub():
     channel = grpc.insecure_channel(

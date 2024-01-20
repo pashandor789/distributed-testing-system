@@ -39,7 +39,7 @@ public:
         order_.erase(it->second);
         order_.push_front({key, value});
         values_[key] = order_.begin();
-        
+
         return value;
     }
 
