@@ -32,7 +32,6 @@ public:
         auto it = values_.find(key);
 
         if (it == values_.end()) {
-            std::cout << "Cachemiss!" << std::endl;
             return std::nullopt;
         }
 
@@ -40,9 +39,7 @@ public:
         order_.erase(it->second);
         order_.push_front({key, value});
         values_[key] = order_.begin();
-
-        std::cout << "Cache works!" << std::endl;
-
+        
         return value;
     }
 
