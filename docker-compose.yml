@@ -43,6 +43,9 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
     tabasco_test:
+        environment:
+            GRPC_TABASCO_HOSTNAME: "grpc_tabasco"
+            HTTP_TABASCO_HOSTNAME: "http_tabasco"
         build:
             context: ./
             dockerfile: ./task_batcher_storage_coordinator/test/Dockerfile

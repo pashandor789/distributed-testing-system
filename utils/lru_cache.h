@@ -4,6 +4,7 @@
 #include <optional>
 #include <unordered_map>
 #include <list>
+#include <iostream>
 
 template <typename TKey, typename TValue, size_t capacity>
 class TLRUCache {
@@ -16,10 +17,12 @@ public:
         }
 
         order_.push_front({key, value});
+        values_[key] = order_.begin();
 
         if (values_.size() > capacity) {
             auto& [k, v] = order_.back();
             values_.erase(k);
+            order_.pop_back();
         }
     }
 
@@ -29,7 +32,6 @@ public:
         auto it = values_.find(key);
 
         if (it == values_.end()) {
-            std::cout << "Cachemiss!" << std::endl;
             return std::nullopt;
         }
 
@@ -37,8 +39,6 @@ public:
         order_.erase(it->second);
         order_.push_front({key, value});
         values_[key] = order_.begin();
-
-        std::cout << "Cache works!" << std::endl;
 
         return value;
     }

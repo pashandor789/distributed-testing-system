@@ -15,7 +15,7 @@ import requests
 
 import pytest
 
-HTTP_TABASCO_URL = 'http://http_tabasco:8080'
+HTTP_TABASCO_URL = f'http://http_tabasco:8080'
 GRPC_TABASCO_URL = 'grpc_tabasco:9090'
 
 
@@ -151,6 +151,7 @@ class TestHTTPTabasco:
     #     response = put_request(f'{HTTP_TABASCO_URL}/uploadTaskRootDir', files=files)
     #
     #     assert response.status_code == 200, f'uploadTaskRootDir failed: {response.content.decode()}'
+
 
 def get_grpc_tabasco_stub():
     channel = grpc.insecure_channel(

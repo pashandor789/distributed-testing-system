@@ -1,5 +1,7 @@
 #include "storage_client.h"
 
+#include "utils/lru_cache.h"
+
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/json.hpp>
 #include <mongocxx/client.hpp>
@@ -93,6 +95,8 @@ public:
 
     TOptionalError UpsertTaskMetaData(TTaskMetaData taskMetaData) {
         try {
+            uint64_t taskId = taskMetaData.taskId;
+
             auto upsertDoc = make_document(
                 kvp(
                     "$set",
@@ -106,6 +110,8 @@ public:
 
             taskMetaCollection_.update_one(filter.view(), upsertDoc.view(), options);
 
+            taskMetaCache_.Erase(taskId);
+
             return std::nullopt;
         } catch (std::exception& e) {
             return e.what();
@@ -114,6 +120,10 @@ public:
 
     TExpected<TTaskMetaData, TError> GetTaskMetaData(uint64_t taskId) {
         try {
+            if (auto maybeMeta = taskMetaCache_.Get(taskId)) {
+                return maybeMeta.value();
+            }
+
             auto maybeMeta = taskMetaCollection_.find_one(make_document(kvp("_id", static_cast<int64_t>(taskId))));
 
             if (!maybeMeta.has_value()) {
@@ -121,11 +131,13 @@ public:
                 return TUnexpected(std::move(err));
             }
 
-            TTaskMetaData metaData;
-
             auto metaDoc = std::move(maybeMeta.value());
+            TTaskMetaData metaData =
+                TTaskMetaData::FromJSON(nlohmann::json::parse(bsoncxx::to_json(metaDoc.view())));
 
-            return TTaskMetaData::FromJSON(nlohmann::json::parse(bsoncxx::to_json(metaDoc.view())));
+            taskMetaCache_.Insert(taskId, metaData);
+
+            return metaData;
         } catch (std::exception& e) {
             return TUnexpected<TError>({.msg = e.what()});
         }
@@ -185,6 +197,7 @@ public:
 
     TOptionalError UpsertBuild(TBuild build) {
         try {
+            uint64_t buildId = build.id;
             auto jsonBuild = build.MoveToJSON();
             jsonBuild.erase("id");
 
@@ -196,10 +209,10 @@ public:
             );
 
             auto filter = make_document(kvp("_id", static_cast<int64_t>(build.id)));
-
             auto options = mongocxx::options::update().upsert(true);
-
             buildsCollection_.update_one(filter.view(), upsertDoc.view(), options);
+
+            buildsCache_.Erase(buildId);
 
             return std::nullopt;
         } catch (std::exception& e) {
@@ -207,18 +220,25 @@ public:
         }
     }
 
-    TExpected<TBuild, TStorageClient::TError> GetBuild(uint64_t buildId) {
+    TExpected<TBuild, TError> GetBuild(uint64_t buildId) {
         try {
+            if (auto maybeBuild = buildsCache_.Get(buildId)) {
+                return maybeBuild.value();
+            }
+
             auto maybeBuild = buildsCollection_.find_one(make_document(kvp("_id", static_cast<int64_t>(buildId))));
 
             if (!maybeBuild.has_value()) {
                 auto err = TError{ .msg = "404 Not Found Build for id: " + std::to_string(buildId) };
-                return TUnexpected<TError>(std::move(err));
+                return TUnexpected(std::move(err));
             }
 
             auto buildDoc = std::move(maybeBuild.value());
+            TBuild build = TBuild::FromJSON(nlohmann::json::parse(bsoncxx::to_json(buildDoc)));
 
-            return TBuild::FromJSON(nlohmann::json::parse(bsoncxx::to_json(buildDoc)));
+            buildsCache_.Insert(buildId, build);
+
+            return build;
         } catch (std::exception& e) {
             return TUnexpected<TError>({.msg = e.what()});
         }
@@ -228,7 +248,7 @@ public:
        try {
            TBuilds builds;
 
-           for (const auto &buildDoc: buildsCollection_.find({})) {
+           for (const auto& buildDoc: buildsCollection_.find({})) {
                builds.items.push_back(TBuild::FromJSON(nlohmann::json::parse(bsoncxx::to_json(buildDoc))));
            }
 
@@ -237,6 +257,10 @@ public:
            return TUnexpected<TError>({.msg = e.what()});
        }
     }
+
+private:
+    TLRUCache<uint64_t, TBuild, 3> buildsCache_{};
+    TLRUCache<uint64_t, TTaskMetaData, 50> taskMetaCache_{};
 
 private:
     mongocxx::client client_;
