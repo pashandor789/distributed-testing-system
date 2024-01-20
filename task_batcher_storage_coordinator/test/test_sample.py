@@ -15,13 +15,8 @@ import requests
 
 import pytest
 
-HTTP_TABASCO_URL = f'http://localhost:8080'
-if os.getenv("HTTP_TABASCO_HOSTNAME") is not None:
-    HTTP_TABASCO_URL = f'http://{os.getenv("HTTP_TABASCO_HOSTNAME")}:8080'
-
-GRPC_TABASCO_URL = 'localhost:9090'
-if os.getenv("GRPC_TABASCO_HOSTNAME") is not None:
-    HTTP_TABASCO_URL = f'http://{os.getenv("GRPC_TABASCO_HOSTNAME")}:9000'
+HTTP_TABASCO_URL = f'http://http_tabasco:8080'
+GRPC_TABASCO_URL = 'grpc_tabasco:9090'
 
 
 def post_request(url, **kwargs):
