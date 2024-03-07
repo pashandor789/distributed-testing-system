@@ -9,6 +9,8 @@ apt-get update && \
 mkdir downloads
 cd downloads
 
+download_dir=$(pwd)
+
 # begin of mongocxx download
 
 apt-get install -y \
@@ -27,6 +29,8 @@ curl -OL https://github.com/mongodb/mongo-cxx-driver/releases/download/r3.9.0/mo
     make install
 
 # end of mongocxx download
+
+cd $download_dir
 
 # begin of grpc download
 
@@ -49,6 +53,8 @@ git clone --recurse-submodules -b v1.60.0 https://github.com/grpc/grpc && \
 
 # end of grpc download
 
+cd $download_dir
+
 # begin of argparse download
 
 git clone https://github.com/p-ranav/argparse.git && \
@@ -61,6 +67,8 @@ git clone https://github.com/p-ranav/argparse.git && \
 
 # end of argparse download
 
+cd $download_dir
+
 # begin of nlohmann/json download
 
 git clone https://github.com/nlohmann/json.git && \
@@ -72,6 +80,8 @@ git clone https://github.com/nlohmann/json.git && \
     make install
 
 # end of nlohmann/json download
+
+cd $download_dir
 
 # begin of crow download
 
@@ -90,6 +100,8 @@ git clone --recurse-submodules https://github.com/CrowCpp/Crow.git && \
 
 # end of crow download
 
+cd $download_dir
+
 # begin of ampqcpp download
 
 git clone https://github.com/CopernicaMarketingSoftware/AMQP-CPP.git && \
@@ -98,6 +110,8 @@ git clone https://github.com/CopernicaMarketingSoftware/AMQP-CPP.git && \
     make install
 
 # end of ampqcpp download
+
+cd $download_dir
 
 # begin of protobuf download
 
@@ -111,6 +125,8 @@ git clone -b v3.17.3 --recurse-submodules https://github.com/protocolbuffers/pro
 
 # end of protobuf download
 
+cd $download_dir
+
 # begin of catch2 download
 
 git clone https://github.com/catchorg/Catch2.git && \
@@ -122,6 +138,8 @@ git clone https://github.com/catchorg/Catch2.git && \
     make install
 
 # end of catch2 download
+
+cd $download_dir
 
 apt-get install -y \
     libsnappy-dev \
@@ -149,6 +167,8 @@ git clone https://github.com/jpbarrette/curlpp.git && \
 
 # end of curlpp download
 
+cd $download_dir
+
 # begin of glog download
 
 git clone https://github.com/google/glog.git && \
@@ -158,3 +178,5 @@ git clone https://github.com/google/glog.git && \
     cmake --build build --target install
 
 # end of glog download
+
+cd $download_dir
