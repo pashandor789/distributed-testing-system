@@ -6,8 +6,8 @@ void TBuildsHandler::Handle(const crow::request &req, crow::response &res, const
     auto expectedBuilds = ctx.server->storageClient_.GetBuilds();
 
     if (expectedBuilds.HasError()) {
-        res.code = 500;
-        res.body = "GetBuilds Error: " + expectedBuilds.Error().msg;
+        res.code = expectedBuilds.Error().errorCode;
+        res.body = std::move(expectedBuilds.Error().msg);
         return;
     }
 
