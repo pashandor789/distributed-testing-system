@@ -171,7 +171,7 @@ cd $download_dir
 
 # begin of glog download
 
-git clone https://github.com/google/glog.git && \
+git clone -b v0.6.0 https://github.com/google/glog.git && \
     cd glog && \
     cmake -S . -B build -G "Unix Makefiles" && \
     cmake --build build && \
