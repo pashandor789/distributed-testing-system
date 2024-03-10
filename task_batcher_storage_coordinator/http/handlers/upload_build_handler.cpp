@@ -35,7 +35,7 @@ void TUploadBuildHandler::Handle(const crow::request& req, crow::response& res, 
 
     if (error.has_value()) {
         res.code = 500;
-        res.body = "UpsertBuild Error: " + error.value();
+        res.body = std::move(error.value());
         return;
     }
 }

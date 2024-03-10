@@ -113,7 +113,7 @@ void TUploadTestsHandler::Handle(const crow::request& req, crow::response& res, 
 
     if (auto maybeError = ctx.server->storageClient_.UpsertTaskTests(std::move(task_))) {
         res.code = 400;
-        res.body = "UpsertTaskTests Error: " + std::move(maybeError.value());
+        res.body = std::move(maybeError.value());
         return;
     }
 

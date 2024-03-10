@@ -127,7 +127,11 @@ public:
             auto maybeMeta = taskMetaCollection_.find_one(make_document(kvp("_id", static_cast<int64_t>(taskId))));
 
             if (!maybeMeta.has_value()) {
-                auto err = TError{ .msg = "404 Not Found TaskMetaData for id: " + std::to_string(taskId) };
+                auto err = TError{
+                    .msg = "404 Not Found TaskMetaData for id: " + std::to_string(taskId),
+                    .errorCode = NOT_FOUND
+                };
+
                 return TUnexpected(std::move(err));
             }
 
@@ -229,7 +233,11 @@ public:
             auto maybeBuild = buildsCollection_.find_one(make_document(kvp("_id", static_cast<int64_t>(buildId))));
 
             if (!maybeBuild.has_value()) {
-                auto err = TError{ .msg = "404 Not Found Build for id: " + std::to_string(buildId) };
+                auto err = TError{
+                    .msg = "404 Not Found Build for id: " + std::to_string(buildId),
+                    .errorCode = NOT_FOUND
+                };
+
                 return TUnexpected(std::move(err));
             }
 

@@ -13,8 +13,8 @@ namespace NDTS::NTabasco {
 
 class TStorageClient {
 public:
-    enum class TErrorCode {};
-    struct TError { std::string msg; };
+    enum  { INTERNAL = 500, NOT_FOUND = 404 };
+    struct TError { std::string msg; int errorCode = INTERNAL; };
     using TOptionalError = std::optional<std::string>;
 
 public:
@@ -34,6 +34,8 @@ public:
     TExpected<TBuild, TError> GetBuild(uint64_t buildId);
 
     TExpected<TBuilds, TError> GetBuilds();
+
+    TExpected<std::string, TError> GetTest();
 
 private:
     struct TImpl;
