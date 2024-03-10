@@ -1,8 +1,11 @@
 import telebot
 from telebot import types
 import pika
+import yaml
 
-token = '7026760925:AAHpUd9zOHVm_Vmo_OqJ1Kgc4AlRNvUQSG4'
+with open("config.yaml", "r") as file:
+    data = yaml.safe_load(file)
+token = data['token']
 bot = telebot.TeleBot(token)
 help_text = "Это бот для сдачи решений по программированию в контест систему (ДТС)"
 
