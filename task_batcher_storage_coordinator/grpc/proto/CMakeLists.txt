@@ -2,10 +2,11 @@ cmake_minimum_required(VERSION 3.21)
 
 include_guard(GLOBAL)
 
-find_package(Protobuf REQUIRED)
+find_package(Protobuf 3.17.3 REQUIRED)
 find_package(gRPC REQUIRED)
 
-set(PROTO_FILES 
+set(
+    PROTO_FILES
     tabasco_grpc.proto
 )
 
