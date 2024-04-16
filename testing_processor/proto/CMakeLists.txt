@@ -1,4 +1,4 @@
-find_package(Protobuf 3.17.3 REQUIRED)
+find_package(Protobuf REQUIRED)
 
 set(Protobuf_PROTOC_EXECUTABLE /usr/bin/protoc)
 set(

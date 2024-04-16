@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 
 include_guard(GLOBAL)
 
-find_package(Protobuf 3.17.3 REQUIRED CONFIG)
+find_package(Protobuf REQUIRED)
 
 set(Protobuf_PROTOC_EXECUTABLE /usr/bin/protoc)
 set(
