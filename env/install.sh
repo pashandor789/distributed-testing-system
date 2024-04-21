@@ -3,7 +3,6 @@ set -e
 # download tools
 apt-get update && \
     apt-get install -y \
-    cmake \
     g++ \
     git \
     autoconf \
@@ -11,6 +10,9 @@ apt-get update && \
     libtool \
     curl \
     make \
+    wget \
+    libssl-dev \
+    build-essential \
     unzip || exit 1
 
 mkdir downloads
@@ -18,25 +20,20 @@ cd downloads
 
 download_dir=$(pwd)
 
-# begin of protobuf download
+# begin of cmake download
 
-git clone -b v3.17.3 --recurse-submodules https://github.com/protocolbuffers/protobuf.git && \
-   cd protobuf && \
-   mkdir build && \
-   cd build && \
-   cmake ../cmake && \
-   make -j $(nproc) && \
-   make install || exit 1
+wget https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1.tar.gz && \
+    tar -zxvf cmake-3.28.1.tar.gz && \
+    cd cmake-3.28.1 && \
+    ./bootstrap && \
+    make -j $(nproc) && \
+    make install || exit 1
 
-
-# end of protobuf download
+# end of cmake download
 
 cd $download_dir
 
 # begin of mongocxx download
-
-apt-get install -y \
-    libssl-dev
 
 curl -OL https://github.com/mongodb/mongo-cxx-driver/releases/download/r3.9.0/mongo-cxx-driver-r3.9.0.tar.gz && \
     tar -xzf mongo-cxx-driver-r3.9.0.tar.gz && \
@@ -58,7 +55,6 @@ cd $download_dir
 
 apt-get update && \
     apt-get install -y  \
-    build-essential \
     pkg-config \
     libgflags-dev libgtest-dev \
     clang libc++-dev || exit 1
@@ -185,4 +181,16 @@ git clone -b v0.6.0 https://github.com/google/glog.git && \
 
 # end of glog download
 
-rm -r $download_dir
+cd $download_dir
+
+# begin of protobuf download
+
+git clone -b v3.17.3 --recurse-submodules https://github.com/protocolbuffers/protobuf.git && \
+   cd protobuf && \
+   mkdir build && \
+   cd build && \
+   cmake ../cmake && \
+   make -j $(nproc) && \
+   make install || exit 1
+
+# end of protobuf downloadя
