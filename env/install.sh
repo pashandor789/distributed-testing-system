@@ -194,3 +194,8 @@ git clone -b v3.17.3 --recurse-submodules https://github.com/protocolbuffers/pro
    make install || exit 1
 
 # end of protobuf downloadя
+
+cd $download_dir
+cd ..
+
+rm -r $download_dir
