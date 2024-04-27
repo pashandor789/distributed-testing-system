@@ -15,26 +15,39 @@ public:
 template <typename TValue, typename TError>
 class TExpected {
 public:
-    TExpected(TValue val)
-        : variant_(std::move(val))
-    {}
+    TExpected(TValue val) {
+        new (&value_) TValue(std::move(val));
+    }
 
     TExpected(TUnexpected<TError> unexpected)
-        : variant_(std::move(unexpected.value_))
-    {}
+        : hasError_(true)
+    {
+        new (&value_) TValue(std::move(unexpected.value_));
+    }
 
     TValue& Value() {
-        return std::get<TValue>(variant_);
+        return *reinterpret_cast<TValue*>(&value_);
     }
 
     TError& Error() {
-        return std::get<TError>(variant_);
+        assert(hasError_);
+        return *reinterpret_cast<TError*>(&value_);
     }
 
     bool HasError() {
-        return std::holds_alternative<TError>(variant_);
+        return hasError_;
+    }
+
+    ~TExpected() {
+        if (hasError_) {
+            reinterpret_cast<TError*>(&error_)->~TError();
+        } else {
+            reinterpret_cast<TValue*>(&value_)->~TValue();
+        }
     }
 
 private:
-    std::variant<TValue, TError> variant_;
+    std::aligned_storage_t<sizeof(TValue), alignof(TValue)> value_;
+    std::aligned_storage_t<sizeof(TError), alignof(TError)> error_;
+    bool hasError_ = false;
 };
