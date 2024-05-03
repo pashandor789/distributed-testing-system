@@ -10,6 +10,7 @@
 /usr/lib/x86_64-linux-gnu/libpqxx-6.4.so
 /usr/lib/x86_64-linux-gnu/libsasl2.so.2
 /usr/lib/x86_64-linux-gnu/libsnappy.so.1
+/usr/local/lib/libglog.so.1
 /usr/local/lib/libbson-1.0.so.0
 /usr/local/lib/libbsoncxx.so._noabi
 /usr/local/lib/libcurlpp.so.1

@@ -11,7 +11,7 @@ build_services: build
 	docker-compose build
 
 launch_services:
-	docker-compose up -d storage broker http_tabasco grpc_tabasco testing_processor
+	docker-compose up -d storage broker http_tabasco grpc_tabasco testing_processor userver
 
 test:
 	docker-compose run tabasco_test

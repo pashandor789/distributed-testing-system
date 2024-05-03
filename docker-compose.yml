@@ -1,12 +1,16 @@
 #file: noinspection YAMLSchemaValidation
 services:
+    test:
+        build: 
+            context: ./
+            dockerfile: ./executor/Dockerfile
     storage:
         healthcheck:
             test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
         image: mongo
         container_name: storage
         ports:
-            - 27017:27017
+            - 27018:27017
     http_tabasco:
         build:
             context: ./
@@ -40,6 +44,8 @@ services:
         depends_on:
             broker:
                 condition: service_healthy
+            test:
+                condition: service_started
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
     tabasco_test:
@@ -54,3 +60,20 @@ services:
                 condition: service_started
             http_tabasco:
                 condition: service_started
+    userver:
+        env_file:
+            - userver/.env
+        build:
+            context: ./userver
+            dockerfile: Dockerfile
+        ports:
+            - 8003:8003
+        depends_on:
+            - userver_db
+    userver_db:
+        image: postgres:13
+        env_file:
+            - userver/lib/db/.env
+        ports:
+            - 5433:5432
+

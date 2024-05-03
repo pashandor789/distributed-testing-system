@@ -4,8 +4,9 @@ RUN apt update && \
     apt install -y \
     zip \
     g++ \
-    cmake
+    cmake \
+    python3
 
 RUN mkdir check
 
-COPY ./build/executor/executor /check/executor
+COPY ./executor/executor /check/executor

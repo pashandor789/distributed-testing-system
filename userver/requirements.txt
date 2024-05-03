@@ -1,0 +1,10 @@
+environs
+fastapi
+jose
+pika
+python-jose[cryptography]
+python-multipart
+requests
+sqlalchemy
+typing
+uvicorn[all]

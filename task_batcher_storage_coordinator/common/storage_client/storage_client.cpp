@@ -110,7 +110,7 @@ public:
 
             taskMetaCollection_.update_one(filter.view(), upsertDoc.view(), options);
 
-            taskMetaCache_.Erase(taskId);
+//            taskMetaCache_.Erase(taskId);
 
             return std::nullopt;
         } catch (std::exception& e) {
@@ -120,9 +120,9 @@ public:
 
     TExpected<TTaskMetaData, TError> GetTaskMetaData(uint64_t taskId) {
         try {
-            if (auto maybeMeta = taskMetaCache_.Get(taskId)) {
-                return maybeMeta.value();
-            }
+//            if (auto maybeMeta = taskMetaCache_.Get(taskId)) {
+//                return maybeMeta.value();
+//            }
 
             auto maybeMeta = taskMetaCollection_.find_one(make_document(kvp("_id", static_cast<int64_t>(taskId))));
 
@@ -139,7 +139,7 @@ public:
             TTaskMetaData metaData =
                 TTaskMetaData::FromJSON(nlohmann::json::parse(bsoncxx::to_json(metaDoc.view())));
 
-            taskMetaCache_.Insert(taskId, metaData);
+//            taskMetaCache_.Insert(taskId, metaData);
 
             return metaData;
         } catch (std::exception& e) {
@@ -216,7 +216,7 @@ public:
             auto options = mongocxx::options::update().upsert(true);
             buildsCollection_.update_one(filter.view(), upsertDoc.view(), options);
 
-            buildsCache_.Erase(buildId);
+//            buildsCache_.Erase(buildId);
 
             return std::nullopt;
         } catch (std::exception& e) {
@@ -226,9 +226,9 @@ public:
 
     TExpected<TBuild, TError> GetBuild(uint64_t buildId) {
         try {
-            if (auto maybeBuild = buildsCache_.Get(buildId)) {
-                return maybeBuild.value();
-            }
+//            if (auto maybeBuild = buildsCache_.Get(buildId)) {
+//                return maybeBuild.value();
+//            }
 
             auto maybeBuild = buildsCollection_.find_one(make_document(kvp("_id", static_cast<int64_t>(buildId))));
 
@@ -244,7 +244,7 @@ public:
             auto buildDoc = std::move(maybeBuild.value());
             TBuild build = TBuild::FromJSON(nlohmann::json::parse(bsoncxx::to_json(buildDoc)));
 
-            buildsCache_.Insert(buildId, build);
+//            buildsCache_.Insert(buildId, build);
 
             return build;
         } catch (std::exception& e) {
@@ -267,8 +267,8 @@ public:
     }
 
 private:
-    TLRUCache<uint64_t, TBuild, 3> buildsCache_{};
-    TLRUCache<uint64_t, TTaskMetaData, 50> taskMetaCache_{};
+//    TLRUCache<uint64_t, TBuild, 3> buildsCache_{};
+//    TLRUCache<uint64_t, TTaskMetaData, 50> taskMetaCache_{};
 
 private:
     mongocxx::client client_;

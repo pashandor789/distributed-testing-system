@@ -33,12 +33,17 @@ void TBrokerClient::Run() {
         [&channel, this](const AMQP::Message& message, uint64_t deliveryTag, bool redelivered) {
             std::string body(message.body(), message.bodySize());
 
-            auto requestJson = nlohmann::json::parse(std::move(body), nullptr, false);
-            auto request = TTestingProcessorRequest(std::move(requestJson));
+            try {
+                auto requestJson = nlohmann::json::parse(std::move(body), nullptr, false);
+                auto request = TTestingProcessorRequest(std::move(requestJson));
+                LOG(INFO) << "Received submission with id: " <<  request.submissionId;
+                testingProcessor_.Process(std::move(request));
 
-            LOG(INFO) << "Received submission with id: " <<  request.submissionId;
-
-            this->testingProcessor_.Process(std::move(request));
+            } catch (std::exception& e) {
+                LOG(INFO) << "Bad request! " <<  e.what();
+            } catch (...) {
+                LOG(INFO) << "Bad request! Undefined error";
+            }
 
             channel.ack(deliveryTag);
         }
