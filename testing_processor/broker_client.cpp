@@ -37,7 +37,7 @@ void TBrokerClient::Run() {
                 auto requestJson = nlohmann::json::parse(std::move(body), nullptr, false);
                 auto request = TTestingProcessorRequest(std::move(requestJson));
 
-            }  catch (std::exception& e) {
+            } in catch (std::exception& e) {
                 LOG(INFO) << "Bad request! " <<  e.what();
             } catch (...) {
                 LOG(INFO) << "Bad request! Undefined error";
