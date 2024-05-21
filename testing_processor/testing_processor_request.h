@@ -6,6 +6,7 @@
 namespace NDTS::NTestingProcessor {
 
 struct TTestingProcessorRequest {
+    template <typename TJSON>
     TTestingProcessorRequest(TJSON json)
         : submissionId(json["submissionId"])
         , buildId(json["buildId"])
